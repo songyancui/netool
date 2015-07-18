@@ -14,6 +14,8 @@
 
 
 
+#AUTOMAKE_OPTIONS=foreign 
+
 
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -89,9 +91,10 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_netool_OBJECTS = main.$(OBJEXT)
+am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) adlist.$(OBJEXT) \
+	dict.$(OBJEXT) ntconfig.$(OBJEXT) cJSON.$(OBJEXT)
 netool_OBJECTS = $(am_netool_OBJECTS)
-netool_LDADD = $(LDADD)
+netool_DEPENDENCIES =
 am_test_OBJECTS = test_main.$(OBJEXT)
 test_OBJECTS = $(am_test_OBJECTS)
 test_LDADD = $(LDADD)
@@ -111,6 +114,10 @@ DEFAULT_INCLUDES = -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
+AM_V_lt = $(am__v_lt_$(V))
+am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
+am__v_lt_0 = --silent
+am__v_lt_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_$(V))
@@ -234,7 +241,14 @@ target_alias =
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
-netool_SOURCES = main.c 
+netool_LDADD = -lm
+netool_SOURCES = main.c \
+		log.c\
+		adlist.c\
+		dict.c\
+		ntconfig.c\
+		third/cJSON/cJSON.c
+
 test_SOURCES = test_main.c 
 all: all-am
 
@@ -327,7 +341,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ./$(DEPDIR)/adlist.Po
+include ./$(DEPDIR)/cJSON.Po
+include ./$(DEPDIR)/dict.Po
+include ./$(DEPDIR)/log.Po
 include ./$(DEPDIR)/main.Po
+include ./$(DEPDIR)/ntconfig.Po
 include ./$(DEPDIR)/test_main.Po
 
 .c.o:
@@ -343,6 +362,20 @@ include ./$(DEPDIR)/test_main.Po
 #	$(AM_V_CC)source='$<' object='$@' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+cJSON.o: third/cJSON/cJSON.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cJSON.o -MD -MP -MF $(DEPDIR)/cJSON.Tpo -c -o cJSON.o `test -f 'third/cJSON/cJSON.c' || echo '$(srcdir)/'`third/cJSON/cJSON.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/cJSON.Tpo $(DEPDIR)/cJSON.Po
+#	$(AM_V_CC)source='third/cJSON/cJSON.c' object='cJSON.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cJSON.o `test -f 'third/cJSON/cJSON.c' || echo '$(srcdir)/'`third/cJSON/cJSON.c
+
+cJSON.obj: third/cJSON/cJSON.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cJSON.obj -MD -MP -MF $(DEPDIR)/cJSON.Tpo -c -o cJSON.obj `if test -f 'third/cJSON/cJSON.c'; then $(CYGPATH_W) 'third/cJSON/cJSON.c'; else $(CYGPATH_W) '$(srcdir)/third/cJSON/cJSON.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/cJSON.Tpo $(DEPDIR)/cJSON.Po
+#	$(AM_V_CC)source='third/cJSON/cJSON.c' object='cJSON.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cJSON.obj `if test -f 'third/cJSON/cJSON.c'; then $(CYGPATH_W) 'third/cJSON/cJSON.c'; else $(CYGPATH_W) '$(srcdir)/third/cJSON/cJSON.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique

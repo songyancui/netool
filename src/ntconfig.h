@@ -1,10 +1,10 @@
 /*
- *worker thread 
+ * config parser 
  * author : songyancui@gmail.com
  */
 
-#ifndef __SGCONFIG_H
-#define __SGCONFIG_H
+#ifndef __NTCONFIG_H
+#define __NTCONFIG_H
 typedef struct server_config{
         int        host;   /* it must to be ip */
         int  port;    /* it must to be  htons  */
@@ -19,7 +19,7 @@ typedef struct server_config{
 
 extern Server_config g_server_config;
  
-int sgConfigInit(char * path);
-int sgConfigDestroy();
+int ntConfigInit(char * path);
+int ntConfigDestroy();
 
-#endif /*end __SGCONFIG_H  */
+#endif /*end __NTCONFIG_H  */
