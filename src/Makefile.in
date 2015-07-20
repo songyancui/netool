@@ -91,8 +91,10 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) adlist.$(OBJEXT) \
-	dict.$(OBJEXT) ntconfig.$(OBJEXT) cJSON.$(OBJEXT)
+am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) test.$(OBJEXT) \
+	mm.$(OBJEXT) adlist.$(OBJEXT) dict.$(OBJEXT) \
+	ntconfig.$(OBJEXT) master.$(OBJEXT) channel.$(OBJEXT) \
+	cJSON.$(OBJEXT)
 netool_OBJECTS = $(am_netool_OBJECTS)
 netool_DEPENDENCIES =
 am_test_OBJECTS = test_main.$(OBJEXT)
@@ -244,9 +246,13 @@ top_srcdir = @top_srcdir@
 netool_LDADD = -lm
 netool_SOURCES = main.c \
 		log.c\
+		test.c\
+        mm.c\
 		adlist.c\
 		dict.c\
 		ntconfig.c\
+		master.c\
+		channel.c\
 		third/cJSON/cJSON.c
 
 test_SOURCES = test_main.c 
@@ -343,10 +349,14 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/adlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cJSON.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dict.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/master.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntconfig.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_main.Po@am__quote@
 
 .c.o:

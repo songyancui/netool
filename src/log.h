@@ -22,9 +22,9 @@
  * API
  */
 
-void    sgLogInit(int low_level, char *path);
-void    sgLogRaw(int level, const char *msg);
-void    sgLogging(int level, const char *fmt, ...);
+void    ntLogInit(int low_level, char *path);
+void    ntLogRaw(int level, const char *msg);
+void    ntLogging(int level, const char *fmt, ...);
 
 
 #endif  /* __LOG_H__ */ 

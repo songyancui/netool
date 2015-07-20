@@ -27,12 +27,12 @@ cJSON *  get_config_from_file(char * path){
 	cJSON * config_json;
 
 	if( NULL == path){
-		sgLogging(LOG_FATAL, "%s","The config path is empty");
+		ntLogging(LOG_FATAL, "%s","The config path is empty");
 		exit(-1);
 	}
 	
 	if((access(path ,4))==-1){
-		sgLogging(LOG_FATAL, "The config file is not exist, the path is %s", path);
+		ntLogging(LOG_FATAL, "The config file is not exist, the path is %s", path);
 		exit(-1);
 	}
 
@@ -57,50 +57,50 @@ int ntConfigInit(char * path){
 	int  valueInt;	
 
 	if(!config){
-		sgLogging(LOG_FATAL, "Could not parse config file %s", path);
+		ntLogging(LOG_FATAL, "Could not parse config file %s", path);
 	}
 	
 	value = cJSON_GetObjectItem(config, "host")->valuestring;
 	if(value){
 		inet_pton(AF_INET,value,&ip_num);
 		g_server_config.host = ip_num;
-		sgLogging(LOG_DEBUG, "%s","load the config[ip]");
+		ntLogging(LOG_DEBUG, "%s","load the config[ip]");
 	}else{
 		inet_pton(AF_INET,"127.0.0.1",&ip_num);
 		g_server_config.host = ip_num;
-		sgLogging(LOG_WARNING, "%s","load the  default config[ip]");
+		ntLogging(LOG_WARNING, "%s","load the  default config[ip]");
 	}
 
 	valueInt = cJSON_GetObjectItem (config, "port")->valueint;
 	if(valueInt){
 		g_server_config.port = valueInt;
-		sgLogging(LOG_DEBUG, "%s","load the config[port]");
+		ntLogging(LOG_DEBUG, "%s","load the config[port]");
 	}else{
 		g_server_config.port = 2013;
-		sgLogging(LOG_DEBUG, "%s","load the default config[port]");
-		sgLogging(LOG_WARNING, "%s","There is no port in the config file");
+		ntLogging(LOG_DEBUG, "%s","load the default config[port]");
+		ntLogging(LOG_WARNING, "%s","There is no port in the config file");
 	}
 	valueInt = -1;
 	
 	valueInt = cJSON_GetObjectItem (config, "master_count")->valueint;
 	if(valueInt){
 		g_server_config.master_count = valueInt;
-		sgLogging(LOG_DEBUG, "%s","load the config[master_count]");
+		ntLogging(LOG_DEBUG, "%s","load the config[master_count]");
 	}else {
 		g_server_config.worker_count = 2;
-		sgLogging(LOG_DEBUG, "%s","load the default config[master_count]");
-		sgLogging(LOG_WARNING, "%s","There is no master_count in the config file");
+		ntLogging(LOG_DEBUG, "%s","load the default config[master_count]");
+		ntLogging(LOG_WARNING, "%s","There is no master_count in the config file");
 	}
 	valueInt = -1;
 
 	valueInt = cJSON_GetObjectItem (config, "worker_count")->valueint;
 	if(valueInt){
 		g_server_config.worker_count = valueInt;
-		sgLogging(LOG_DEBUG, "%s","load the config[work_count]");
+		ntLogging(LOG_DEBUG, "%s","load the config[work_count]");
 	} else {
 		g_server_config.worker_count = 4;
-		sgLogging(LOG_DEBUG, "%s","load the default config[work_count]");
-		sgLogging(LOG_WARNING, "%s","There is no worker_count in the config file");
+		ntLogging(LOG_DEBUG, "%s","load the default config[work_count]");
+		ntLogging(LOG_WARNING, "%s","There is no worker_count in the config file");
 	}
 	valueInt = -1;
 
@@ -109,7 +109,7 @@ int ntConfigInit(char * path){
 }
 
 int ntConfigDestroy(){
-	sgLogging(LOG_DEBUG,"%s","config destructed \n");
+	ntLogging(LOG_DEBUG,"%s","config destructed \n");
 	//TODO
 }
 

@@ -16,12 +16,12 @@
 int g_logging_min_level = LOG_NOTICE;
 char *g_logging_path = NULL;
 
-void sgLogInit(int low_level, char * path){
+void ntLogInit(int low_level, char * path){
     g_logging_path = path;
     g_logging_min_level = low_level;  
 }
 
-void sgLogging(int level, const char *fmt,...){
+void ntLogging(int level, const char *fmt,...){
     va_list ap;
 
     char msg[MAX_LOGMSG_LEN];
@@ -31,10 +31,10 @@ void sgLogging(int level, const char *fmt,...){
     va_start(ap, fmt);
     vsnprintf(msg, sizeof(msg), fmt, ap);
     va_end(ap);
-    return sgLogRaw(level, msg);
+    return ntLogRaw(level, msg);
 }
 
-void sgLogRaw(int level, const char *msg){
+void ntLogRaw(int level, const char *msg){
     const char *c = ".-*#@";
 
     FILE *fp;
