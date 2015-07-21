@@ -93,60 +93,6 @@ int	receive_msg_channel(int fd,Inner_msg *msg){
 		ntLogging(LOG_DEBUG,"%s %d %d","receive the mess",inner_msg_ptr->command,sizeof(Inner_msg));
 		return 1;
 	}
-	
-int ntread(int fd, void * ptr){
-	int  n;
-	struct iovec iov[1];
-	struct msghdr msg;
-	
-	iov[0].iov_base = ptr;
-	iov[0].iov_len = MAX_RECV_LENGTH;
-	
-	msg.msg_control = NULL;
-	msg.msg_controllen = 0;
-	msg.msg_name = NULL;
-	msg.msg_namelen = 0; 
-	msg.msg_iov = iov; 
-    msg.msg_iovlen = 1;
-	msg.msg_flags = 0;
-
-	n = recvmsg(fd, &msg, 0);
-	if(n == -1){
-		ntLogging(LOG_WARNING,"%s","recvmsg failed ");
-	}
-		
-    ntLogging(LOG_DEBUG,"%s %d messages","recvmsg", n);
-
-	return n;
-}
-
-
-int ntwrite(int fd ,void * ptr){
-	ssize_t n;
-	struct iovec iov[1];
-	struct msghdr msg;
-	
-	iov[0].iov_base = ptr;
-	iov[0].iov_len = sizeof(*ptr);
-    	
-	msg.msg_control = NULL;
-	msg.msg_controllen = 0;
-	msg.msg_name =NULL;
-	msg.msg_namelen = 0;
-	msg.msg_iov = iov;
-	msg.msg_iovlen  =1;
-	msg.msg_flags = 0;
-
-	n = sendmsg(fd, &msg, 0);
-	
-	if(n == -1){
-		ntLogging(LOG_WARNING,"%s, errno : %d","channel push failed", errno);
-	}else{
-		ntLogging(LOG_DEBUG,"%s %d messages","sendmsg", n);
-	}
-	return 0;
-}
-
 
 int	close_channel(Channel * channel_ptr){
 		if(channel_ptr == NULL){

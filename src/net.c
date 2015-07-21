@@ -150,6 +150,129 @@ int ntCreateStreamSocket(int domain) {
     return s;
 }
 
+int ntListen(int s, struct sockaddr *sa, socklen_t len){
+    if (sa == NULL) {
+        ntLogging(LOG_WARNING,"ntListen failed, param sa is NULL");
+        return NET_ERR;
+    }
+
+    if (len < 0 || s < 0){
+        ntLogging(LOG_WARNING,"ntListen failed, param len  or socketfd is smaller than 0" );
+        return NET_ERR;
+    }
+
+    if (bind(s, sa, len) == -1){
+        ntLogging(LOG_WARNING,"bind socket failed:%s" ,strerror(errno));
+        close(s);
+        return NET_ERR;
+    }
+
+
+    if (listen(s, LISTEN_BACKLOG) == -1){
+        ntLogging(LOG_WARNING,"listen failed: %s", strerror(errno) );
+        close(s);
+        return NET_ERR;
+    }
+
+    return NET_OK;
+}
+
+int ntTcpServer(int port, char *bindaddr){
+    int s;
+    struct sockaddr_in sa;
+
+    if ((s = ntCreateStreamSocket(AF_INET)) == NET_ERR){
+        return NET_ERR;
+    }
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sin_family = AF_INET;
+    sa.sin_port = htons(port);
+    sa.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bindaddr && inet_aton(bindaddr, &sa.sin_addr) == 0){
+        ntLogging(LOG_WARNING,"listen socekt bind addr failed,bindadr invalid");
+        close(s);
+        return NET_ERR;
+    }
+    if (ntListen(s, (struct sockaddr*)&sa, sizeof(sa)) ==  NET_ERR) {
+        return NET_ERR;
+    }
+    return s;
+}
+
+int ntUnixListen(char *path, mode_t perm){
+    int s;
+    struct sockaddr_un su;
+
+    if (path == NULL) {
+        ntLogging(LOG_WARNING,"UnixListen param path is NULL");
+        return NET_ERR;
+    }
+
+    if ((s = ntCreateStreamSocket(AF_LOCAL)) == NET_ERR) {
+        return NET_ERR;
+    }
+
+    memset(&su,0, sizeof(su));
+    su.sun_family = AF_LOCAL;
+    strncpy(su.sun_path, path, sizeof(su.sun_path)-1);
+
+    if (ntListen(s,(struct sockaddr *)&su, sizeof(su)) == NET_ERR){
+        ntLogging(LOG_WARNING,"unix socket listen failed, %s",strerror(errno) );
+        return NET_ERR; 
+    }
+    
+    if (perm){
+        chmod(su.sun_path, perm);
+    }
+
+    return s;
+}
+
+int ntGenericAccept(int s, struct sockaddr *sa, socklen_t *len){
+    int client_fd;
+    while(1) {
+        client_fd = accept(s, sa, len) {
+           if (client_fd == -1) {
+                if (errno == EINTR) {
+                    continue;
+                }else{
+                    ntLogging(LOG_WARNING,"accept error:%s", strerror(errno));
+                    return NET_ERR;
+                }
+
+           }
+            break;
+        }
+    }
+    return client_fd;
+}
+
+int ntTcpAccept(int s, char *ip, int *port){
+    int fd;
+    struct sockaddr_in sa;
+    socklen_t salen = sizeof(sa);
+    if ((fd = ntGenericAccept(s, (struct sockaddr *) &sa, &salen)) == NET_ERR) {
+        return NET_ERR;
+    }
+
+    if (ip) strcpy(ip, inet_itoa(sa.sin_addr));
+    if (port) *port = ntohs(sa.sin_port);
+    return  fd;
+}
+
+int ntUnixAccept(int s){
+    int fd;
+    struct sockaddr_un su;
+    socklen_t salen = sizeof(su);
+
+    if ((fd == ntGenericAccept(s, (struct sockaddr *)&su, &salen)) == NET_ERR){
+        return NET_ERR;
+    }
+
+    return fd;
+}
 
 /** SOCKET OPT END **/
 
@@ -273,5 +396,45 @@ int ntUnixConnect(char *path){
     return ntUnixGenericConnect(path, NET_CONNECT_NONE);
 }
 
+int ntPeerToString(int fd, char *ip, int *port) {
+    struct sockaddr_in sa;
+    socklen_t salen = sizeof(sa);
+
+    if (getpeername(fd,(struct sockaddr*)&sa,&salen) == -1) {
+        *port = 0;
+        ip[0] = '?';
+        ip[1] = '\0';
+        return -1;
+    }
+    if (ip) strcpy(ip,inet_ntoa(sa.sin_addr));
+    if (port) *port = ntohs(sa.sin_port);
+    return 0;
+}
+
+int ntSockName(int fd, char *ip, int *port) {
+    struct sockaddr_in sa;
+    socklen_t salen = sizeof(sa);
+
+    if (getsockname(fd,(struct sockaddr*)&sa,&salen) == -1) {
+        *port = 0;
+        ip[0] = '?';
+        ip[1] = '\0';
+        return -1;
+    }
+    if (ip) strcpy(ip,inet_ntoa(sa.sin_addr));
+    if (port) *port = ntohs(sa.sin_port);
+    return 0;
+}
+
+
 /** TCP opiotn END **/
 
+#ifdef TEST 
+#include "test.h" 
+
+int main(int argc, const char *argv[])
+{
+    
+    return 0;
+}
+#endif

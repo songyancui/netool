@@ -33,6 +33,5 @@
 
 #define NET_OK
 #define NET_ERR
-#define LISTEN_BACKLOG 1024
 
 #endif /* end of include guard: NET_H */

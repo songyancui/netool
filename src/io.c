@@ -27,4 +27,83 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
+int ntread(int fd, void * ptr){
+	int  n;
+	struct iovec iov[1];
+	struct msghdr msg;
+	
+	iov[0].iov_base = ptr;
+	iov[0].iov_len = MAX_RECV_LENGTH;
+	
+	msg.msg_control = NULL;
+	msg.msg_controllen = 0;
+	msg.msg_name = NULL;
+	msg.msg_namelen = 0; 
+	msg.msg_iov = iov; 
+    msg.msg_iovlen = 1;
+	msg.msg_flags = 0;
 
+	n = recvmsg(fd, &msg, 0);
+	if(n == -1){
+		ntLogging(LOG_WARNING,"%s","recvmsg failed ");
+	}
+		
+    ntLogging(LOG_DEBUG,"%s %d messages","recvmsg", n);
+
+	return n;
+}
+
+
+int ntwrite(int fd ,void * ptr){
+	ssize_t n;
+	struct iovec iov[1];
+	struct msghdr msg;
+	
+	iov[0].iov_base = ptr;
+	iov[0].iov_len = sizeof(*ptr);
+    	
+	msg.msg_control = NULL;
+	msg.msg_controllen = 0;
+	msg.msg_name =NULL;
+	msg.msg_namelen = 0;
+	msg.msg_iov = iov;
+	msg.msg_iovlen  =1;
+	msg.msg_flags = 0;
+
+	n = sendmsg(fd, &msg, 0);
+	
+	if(n == -1){
+		ntLogging(LOG_WARNING,"%s, errno : %d","channel push failed", errno);
+	}else{
+		ntLogging(LOG_DEBUG,"%s %d messages","sendmsg", n);
+	}
+	return 0;
+}
+
+int readEasyByCount(int fd, char * buf, int count){
+    int nread, totlen = 0;
+
+    while(totlen != count) {
+        nread = read(fd, buf, count - totlen);     
+        if (nread == 0) return totlen;
+        if (nread == -1) return -1;
+        totlen += nread;
+        buf += nread;
+    }
+
+    return totlen;
+}
+
+int writeEasyByCount(int fd, char *buf, int count){
+    int nwrite, totlen = 0;
+
+    while(count != totlen) {
+        nwrite = write(fd, buf, count - totlen);
+        if (nwrite == 0) return totlen; //this means the send buffer is full 
+        if (nwiret == -1) return -1;
+        totlen += nwrite;
+        buf += nwrite;
+    }
+
+    return totlen;
+}
