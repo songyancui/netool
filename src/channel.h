@@ -28,7 +28,6 @@
 */
 #ifndef __CHANNEL_H
 #define __CHANNEL_H
-#define MAX_RECV_LENGTH 4096 
 
 typedef struct inner_msg{
 	int status;

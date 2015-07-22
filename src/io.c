@@ -26,6 +26,17 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 */
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <errno.h>
+ 
+ #include "io.h"
+ #include "log.h"
+
 
 int ntread(int fd, void * ptr){
 	int  n;
@@ -80,13 +91,16 @@ int ntwrite(int fd ,void * ptr){
 	return 0;
 }
 
-int readEasyByCount(int fd, char * buf, int count){
+int ntreadEasyByCount(int fd, char * buf, int count){
     int nread, totlen = 0;
 
     while(totlen != count) {
         nread = read(fd, buf, count - totlen);     
         if (nread == 0) return totlen;
-        if (nread == -1) return -1;
+        if (nread == -1) {
+            ntLogging(LOG_WARNING,"ntreadEasyByCount error %s", strerror(errno) );
+            return -1;
+        }
         totlen += nread;
         buf += nread;
     }
@@ -94,13 +108,16 @@ int readEasyByCount(int fd, char * buf, int count){
     return totlen;
 }
 
-int writeEasyByCount(int fd, char *buf, int count){
+int ntwriteEasyByCount(int fd, char *buf, int count){
     int nwrite, totlen = 0;
 
     while(count != totlen) {
         nwrite = write(fd, buf, count - totlen);
         if (nwrite == 0) return totlen; //this means the send buffer is full 
-        if (nwiret == -1) return -1;
+        if (nwrite == -1) {
+            ntLogging(LOG_WARNING,"ntwriteEasyByCount  error:%s", strerror(errno));
+            return -1;
+        }
         totlen += nwrite;
         buf += nwrite;
     }

@@ -12,6 +12,8 @@ netool_SOURCES=main.c \
 		ntconfig.c\
 		master.c\
 		channel.c\
+		net.c\
+		io.c\
 		third/cJSON/cJSON.c
 		
 

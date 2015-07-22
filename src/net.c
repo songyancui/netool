@@ -42,6 +42,8 @@
 #include <stdio.h>
 
 #include "log.h" 
+#include "mm.h" 
+#include "net.h"
 
 /** FILE DESC  option  **/
 int ntFdNonBlock(int fd){
@@ -49,6 +51,7 @@ int ntFdNonBlock(int fd){
         ntLogging(LOG_WARNING,"fd is invalid value" );     
         return NET_ERR;
     }
+    int flags;
     if ((flags = fcntl(fd, F_GETFL)) == -1) {
         ntLogging(LOG_WARNING,"fcntl F_GETFL error");  
         return NET_ERR;
@@ -78,7 +81,7 @@ int ntResolve(char * host, char *ipstr){
             return NET_ERR;
 
         }
-        memcpy(&sa.sin_addr, he->h_addr, sizeof(struct in_addr));
+        ntmemcpy(&sa.sin_addr, he->h_addr, sizeof(struct in_addr));
     }
     strcpy(ipstr, inet_ntoa(sa.sin_addr)); 
     return NET_OK;
@@ -91,7 +94,7 @@ int ntResolve(char * host, char *ipstr){
 
 //set the socket send buffer
 int ntSocketSetSendBuffer(int fd, int buffsize){
-    if (setsocketopt(fd, SOL_SOCKET, SO_SNDBUF, &buffsize, sizeof(buffsize)) == -1) {
+    if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buffsize, sizeof(buffsize)) == -1) {
          ntLogging(LOG_WARNING,"setsocketopt(SO_SNDBUF) failed");
          return NET_ERR;
     }
@@ -106,7 +109,7 @@ int ntSockSetReuseAddr(int fd){
     }
 
     int flag = 1;
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1) {
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1) {
         ntLogging(LOG_WARNING,"setsockeopt(SO_REUSEADDR) failed" );    
         return NET_ERR;
     }
@@ -115,7 +118,7 @@ int ntSockSetReuseAddr(int fd){
 
 int ntCreateNetStreamSocket(){
     int s;        
-    if ((s = socket(AF_INET, SOCKET_STREAM), 0) == -1){
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         ntLogging(LOG_WARNING,"create socket(AF_INET,SOCKET_STREAM) failed" );    
         return NET_ERR;
     }
@@ -125,7 +128,7 @@ int ntCreateNetStreamSocket(){
 
 int ntCreateUnixStreamSocket(){
     int s;        
-    if ((s = socket(AF_LOCAL, SOCKET_STREAM), 0) == -1){
+    if ((s = socket(AF_LOCAL, SOCK_STREAM, 0)) == -1){
         ntLogging(LOG_WARNING,"create socket(AF_INET,SOCKET_STREAM) failed" );    
         return NET_ERR;
     }
@@ -141,7 +144,7 @@ int ntCreateStreamSocket(int domain) {
             s = ntCreateUnixStreamSocket(); 
             break;
         //net stream socket 
-        default :
+        default:
             s = ntCreateNetStreamSocket();
     }
     if (s == NET_ERR) {
@@ -201,7 +204,7 @@ int ntTcpServer(int port, char *bindaddr){
     return s;
 }
 
-int ntUnixListen(char *path, mode_t perm){
+int ntUnixServer(char *path, mode_t perm){
     int s;
     struct sockaddr_un su;
 
@@ -233,7 +236,7 @@ int ntUnixListen(char *path, mode_t perm){
 int ntGenericAccept(int s, struct sockaddr *sa, socklen_t *len){
     int client_fd;
     while(1) {
-        client_fd = accept(s, sa, len) {
+        client_fd = accept(s, sa, len) ;
            if (client_fd == -1) {
                 if (errno == EINTR) {
                     continue;
@@ -245,7 +248,6 @@ int ntGenericAccept(int s, struct sockaddr *sa, socklen_t *len){
            }
             break;
         }
-    }
     return client_fd;
 }
 
@@ -257,7 +259,7 @@ int ntTcpAccept(int s, char *ip, int *port){
         return NET_ERR;
     }
 
-    if (ip) strcpy(ip, inet_itoa(sa.sin_addr));
+    if (ip) strcpy(ip, inet_ntoa(sa.sin_addr));
     if (port) *port = ntohs(sa.sin_port);
     return  fd;
 }
@@ -267,7 +269,7 @@ int ntUnixAccept(int s){
     struct sockaddr_un su;
     socklen_t salen = sizeof(su);
 
-    if ((fd == ntGenericAccept(s, (struct sockaddr *)&su, &salen)) == NET_ERR){
+    if ((fd = ntGenericAccept(s, (struct sockaddr *)&su, &salen)) == NET_ERR){
         return NET_ERR;
     }
 
@@ -280,7 +282,7 @@ int ntUnixAccept(int s){
 int ntTcpNoDelay(int fd){
     int value ;
     if (fd < -1){
-        ntLogging(LOG_WARNING,"fd is invalid value", );    
+        ntLogging(LOG_WARNING,"fd is invalid value");    
         return NET_ERR;
     } 
     
@@ -324,7 +326,7 @@ int ntNetGenericConnect(char * addr, int port, int flags) {
              ntLogging(LOG_WARNING,"can not resolve" );
              return NET_ERR;
         }
-        memcpy(sa.sin_addr, he->h_addr);
+        memcpy(&sa.sin_addr, he->h_addr, sizeof(struct in_addr));
     }
 
     if (flags & NET_CONNECT_NONBLOCK) {
@@ -333,11 +335,11 @@ int ntNetGenericConnect(char * addr, int port, int flags) {
         }
     }
 
-    if (connect(s, (struct sockaddr * )&sa, sizeof(sa) == -1)){
+    if (connect(s, (struct sockaddr * )&sa, (sizeof(sa))) == -1){
         if (errno == EINPROGRESS && flags& NET_CONNECT_NONBLOCK){
             return s;
         }
-        ntLogging(LOG_WARNING,"connect %",strerror(errno) );
+        ntLogging(LOG_WARNING,"connect %s",strerror(errno) );
         close(s);
         return NET_ERR;
     }
@@ -357,12 +359,9 @@ int ntUnixGenericConnect(char * path, int flags){
         ntLogging(LOG_WARNING,"ntUnixGenericConnect->path is NULL "); return NET_ERR;
     }
 
-    if (port < 0){
-        ntLogging(LOG_WARNING,"ntUnixGenericConnect->port is NULL");
-        return NET_ERR;
-    }
 
     struct sockaddr_un su;
+    int s;
 
     if ((s = ntCreateStreamSocket(AF_LOCAL)) == NET_ERR){
         return NET_ERR;
@@ -431,10 +430,64 @@ int ntSockName(int fd, char *ip, int *port) {
 
 #ifdef TEST 
 #include "test.h" 
+#include "io.h" 
 
 int main(int argc, const char *argv[])
 {
-    
+
+    ntLogInit(LOG_DEBUG, NULL);
+    char * unixPath="./test.sock";
+    char * send_msg = "master_send_msg";
+    int port = 7889;
+    int pid;
+    int master_listen_net_fd, master_listen_unix_fd;
+    int master_accept_net_fd, master_accept_unix_fd;
+    int client_connect_net_fd, client_connect_unix_fd;
+
+   if((pid = fork()) > 0 ){
+        //parent process 
+        ntassert(master_listen_net_fd = ntTcpServer(port, NULL), "test ntTcpServer");
+        ntassert(master_listen_unix_fd = ntUnixServer(unixPath, 0),"test ntUnixServer");
+
+        ntassert(NET_OK == ntSockSetReuseAddr(master_listen_net_fd),"test ntSockReuseAddr");
+        ntSockSetReuseAddr(master_listen_unix_fd);
+
+        ntassert(master_accept_unix_fd = ntUnixAccept(master_listen_unix_fd), "test ntUnixConnect");  
+        int send_totlen ;
+        send_totlen = ntwriteEasyByCount(master_accept_unix_fd, send_msg, strlen(send_msg));
+        ntassert((send_totlen == strlen(send_msg)), "master unix send msg " );
+
+        send_totlen = 0;
+        ntassert((master_accept_net_fd = ntTcpAccept(master_listen_net_fd, NULL, NULL)), "test ntTcpAccept"); 
+        send_totlen = ntwriteEasyByCount(master_accept_net_fd, send_msg, strlen(send_msg));
+        ntassert((send_totlen == strlen(send_msg)), "master net send msg ");
+        char ipstr[10];
+        ntassert((NET_OK == ntFdNonBlock(master_accept_net_fd)), "test ntFdNonBlock");
+        ntassert((NET_OK == ntResolve("localhost",ipstr)), "test ntResolve");
+        ntassert((NET_OK == ntSocketSetSendBuffer(master_accept_net_fd, 4096)), "test ntSocketSetSendBuffer");
+        ntassert((NET_OK == ntTcpNoDelay(master_accept_net_fd)), "test ntTcpNoDelay");
+
+   }else{
+        //child process; 
+        ntassert(1 ,"client test");
+        sleep(1);
+        ntassert(client_connect_unix_fd = ntUnixConnect(unixPath), "test ntUnixConnect");
+        int receive_totlen; 
+        char  recv_msg[20];
+        receive_totlen = ntreadEasyByCount(client_connect_unix_fd,recv_msg,strlen(send_msg));
+        ntassert(receive_totlen == strlen(send_msg), "client unix recv msg");
+        ntassert(!strcmp(send_msg, recv_msg), "unix campare send_msg and recv_msg");
+
+        receive_totlen = 0;
+        ntassert(client_connect_net_fd = ntTcpConnect("127.0.0.1", port), "test ntTcpConnect");
+        receive_totlen = ntreadEasyByCount(client_connect_net_fd,recv_msg,20);
+        ntassert(receive_totlen == strlen(send_msg), "client net recv msg");
+        ntassert(!strcmp(send_msg, recv_msg), "net campare send_msg and recv_msg");
+
+
+   }
+
+
     return 0;
 }
 #endif

@@ -33,7 +33,6 @@
 #include "mm.h"
 
 void * ntmalloc(int size  ){
-
     return malloc(size); 
 }
 
@@ -42,5 +41,9 @@ void  ntfree(void * item){
 }
 
 void * ntmemset(void * item, int value,size_t size){
-       return memset(item, value , size); 
+   return memset(item, value , size); 
+}
+
+void * ntmemcpy(void *to, void *from, size_t size){
+    return memcpy(to, from, size); 
 }

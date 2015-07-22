@@ -35,7 +35,7 @@
 #define  TRUE 1 
 
 void ntassert(int is_true, char * str){
-    if (is_true == TRUE){
+    if (is_true >= TRUE){
         ntLogging(LOG_NOTICE,"SUCCESSFUL: %s", str);
     }else {
         ntLogging(LOG_FATAL, "ERROR     : %s", str);

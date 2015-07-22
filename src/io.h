@@ -26,3 +26,15 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 */
+
+#ifndef IO_H
+#define IO_H
+
+#include "io.h"
+#define  MAX_RECV_LENGTH  4096 
+int ntread(int, void *);
+int ntwrite(int, void *);
+int ntreadEasyByCount(int , char *, int); 
+int ntwriteEasyByCount(int , char *, int); 
+
+#endif /* end of include guard: IO_H*/

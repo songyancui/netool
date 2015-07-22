@@ -34,5 +34,6 @@
 void * ntmalloc(int size);
 void  ntfree(void * item);
 void * ntmemset(void *, int, size_t);
+void * ntmemcpy(void *, void *, size_t);
 
 #endif /* end of include guard: MM_H */

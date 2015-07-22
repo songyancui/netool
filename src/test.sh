@@ -2,7 +2,7 @@
 
 echo "*******************start testing*************";
 
-LD_RELAY="mm.o channel.o log.o test.o"
+LD_RELAY="mm.o channel.o log.o test.o io.o net.o"
 
 # $1：test_bin
 # $2: src
@@ -27,4 +27,5 @@ test_util()
 
 test_util "master" "master.c"; 
 test_util "channel" "channel.c"; 
-
+test_util "net" "net.c" ;
+rm test.sock;
