@@ -27,43 +27,65 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef NET_H
-#define NET_H
-#include "net.h"
+#ifndef EVENT_H
 
-#define NET_OK 1
-#define NET_ERR -1
-#define LISTEN_BACKLOG 1024
+#define EVENT_H
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <sys/stat.h>
-
-int ntFdNonBlock(int );
-int ntResolve(char * , char *);
-int ntSocketSetSendBuffer(int , int );
-int ntSockSetReuseAddr(int );
-int ntCreateNetStreamSocket();
-int ntCreateUnixStreamSocket();
-int ntCreateStreamSocket(int );
-int ntListen(int , struct sockaddr *, socklen_t);
-int ntTcpServer(int, char *);
-int ntUnixServer(char *, mode_t);
-int ntGenericAccept(int , struct sockaddr *, socklen_t *);
-int ntTcpAccept(int , char *, int *);
-int ntUnixAccept(int );
-int ntTcpNoDelay(int);
-int ntNetGenericConnect(char*, int , int);
-int ntTcpConnect(char *, int);
-int ntTcpNonBlockConnect(char *, int );
-int ntUnixGenericConnect(char *, int );
-int ntUnixNonBlockConnect(char *);
-int ntUnixConnect(char *);
-int ntPeerToString(int, char *, int *);
-int ntSockName(int, char *, int *);
+#define EVENT_OK 0
+#define EVENT_ERR -1 
 
 
-#endif /* end of include guard: NET_H */
+#define IO_NONE 1
+#define IO_READABLE 2
+#define IO_WRITABLE 3
 
+#define EVENT_IO_EVENTS 1
+#define EVENT_TIME_EVENTS 2
+#define EVENT_ALL_EVENT (EVENT_IO_EVENTS | EVENT_TIME_EVENTS)
+#define EVENT_DONT_WAIT 4
+
+#define EVENT_TIME_CYC 1
+
+typedef void eventCallback(struct eventLoop*, int, void *, int );
+typedef void timeCallback(struct eventLoop *, int , void *);
+typedef void timeFinalCallback(struct eventLoop*, void *);
+typedef void beforeLoopCallback(struct eventLoop *);
+
+typedef struct ioEvent {
+    int mask;
+    eventCallback readCallback;
+    eventCallback writeCallback;
+    void * clientData;
+} IoEvent;
+
+typedef struct timeEvent{
+    long long  id; 
+
+    long trigger_sec;
+    long trigger_ms;     
+
+    timeCallback *timeCallback;  //fired at trigger time
+    timeFinalCallback *timeFinalCallback; // the last action 
+
+    void *clientData;  //your data
+
+    struct timeEvent * next; // list
+}
+
+typedef struct eventLoop {
+    int maxfd; //the max fd 
+    int volumn_size;  // the  eventLoop volumn ;
+    long long timeEventNextId; // the time event id , id ++
+    time_t lastTime;  //the last triggered time 
+
+    IoEvent *events;  //this array will be seeked by fd 
+    Ioevent *waiting_events;  // collect all the fired events
+    TimeEvent * timeEventHead ; 
+    int is_stop;
+    void *apidata; 
+
+    beforeLoopCallback* beforeLoop;
+} EventLoop;
+
+
+#endif /* end of include guard: EVENT_H */
