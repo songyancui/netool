@@ -35,6 +35,7 @@
 #include <time.h> #include "event.h"
 #include "log.h"
 #include "mm.h"
+#include "net.h"
 
 //TOCSY: have to adapte kernal
 #ifdef HAVE_EPOLL
@@ -174,13 +175,195 @@ void addMilsec2Now(long long milsec, long *sec, long *ms){
     
     when_sec = cur_sec + milsec / 1000;
     when_ms = cur_ms + milsec % 1000;
+if (when_ms > 1000){ when_sec ++; when_ms -= 1000; } *sec = when_sec;
+    *ms = when_ms;
+}
 
-    if (when_ms > 1000){
-        when_sec ++;
-        when_ms -= 1000;
+
+long long  createTimeEvent( EventLoop *eventLoop_p, long long millsec, timeCallback proc,void * clientData, timeFinalCallback finalProc ){
+    long long id = eventLoop_p->timeEventNextId++
+    long sec, ms;
+    TimeEvent  * timeEvent_p ;
+    timeEvent_p = ntmalloc(sizeof (TimeEvent));
+    if (timeEvent_p == NULL){
+        ntLogging(LOG_WARNING,"timeevent create failed" );
+        return EVENT_ERR;
     }
 
-    *sec = when_sec;
-    *ms = when_ms;
+    addMilsec2Now(millsec, &sec, &ms); 
+    timeEvent_p-> id = id;
+    timeEvent_p->timeCallback = proc;
+    timeEvent_t->timeFinalCallback = finalProc;
+    timeEvent_p->trigger_sec = sec;
+    timeEvent_p->trigger_ms = ms;
+    timeEvent_p->clienData = clientData;
+    
+    timeEvent_p->next = eventLoop_p->timeEventHead ;
+    eventLoop_p->timeEventHead = timeEvent_p;
+    return id;
+}
+
+int delTimeEvent(EventLoop * eventLoop_p, long long  id){
+    TimeEvent * te, prev;
+    prev = NULL;
+    te = eventLoop_p->timeEventHead; 
+    while(te){
+        if (te->id == id){
+            if (prev == NULL){
+               eventLoop_p->timeEventHead = te->next; 
+            }else{
+                prev->next = te->next;
+            }
+            if (te->timeFinalCallback)
+                te->timeFinalCallback(eventLoop_p, te->clientData);
+            ntfree(te);
+            return EVENT_OK;
+        }else{
+            prev = te; 
+            te = te->next;
+        }
+    }
+    return EVENT_ERR;
+}
+
+//TOCSY:O(n)  need to optimaze 
+static getNearestTime(EventLoop * eventLoop_p){
+   TimeEvent * te, nearest ; 
+
+    te = eventLoop_p->timeEventHead;
+    while(te){
+        if (!nearest || nearest->trigger_sec > te->trigger_sec || (nearest->trigger_sec == te->trigger_sec && nearest->trigger_ms > te->trigger_ms)){
+            nearest = te;
+            te = te->next;
+        } 
+    }
+    return nearest; 
+}
+
+int processTimeEvent(EventLoop * eventLoop_p){
+    int processed = 0;
+    TimeEvent * te;
+    long long maxId;
+    time_t now = time(NULL);
+
+    
+    te = eventLoop_p->timeEventHead;
+    maxId = eventLoop_p->timeEventNextId-1;
+    while(te) {
+        long now_sec, now_ms;
+        long long id;
+        if (te->id > maxId)
+            continue;
+        getTime(&now_sec, &now_ms);
+        if (te->trigger_sec < new_sec || (te->trigger_sec == new_sec && te->trigger_ms < now_ms)){
+            int retval;
+            id = te->id;
+            retval = te->timeCallback(eventLoop_p, id, clientData);  
+            processed ++;
+            if (retval == EVENT_TIME_NOT_CYC){
+                addMilsec2Now(retval, te->trigger_sec, te->trigger_ms) ;
+            }else{
+                delTimeEvent(eventLoop_p, id);     
+            }
+            //when process current time event , the timeEventHead could be changed
+            //so change the te to  the first 
+
+            te = eventLoop_p->timeEventHead; 
+        }else{
+            te = te->next;
+        }
+    }
+    return processed;
+}
+
+/**
+* flags
+* EVENT_IO_EVENTS  : process the triggered io events
+* EVENT_TIME_EVENTS: process time triggered events
+* EVENT_ALL_EVENTS : process IO and time events
+* EVENT_DONT_WAIT : the epoll timeout set -1
+*/
+
+int processEvents(EventLoop * eventLoop_p, int flags){
+    int processed=0, numevents; 
+    struct timeval tv, *tvp;
+
+    if (!(flags&EVENT_IO_EVENTS)||!(flags&EVENT_TIME_EVENTS)){
+        return 0;
+    }
+
+    TimeEvent * nearest = NULL;
+
+    if ((flags& EVENT_TIME_EVENTS) && !(flags & EVENT_DONT_WAIT)){
+        nearest = getNearestTime(); 
+    }
+    if (nearest){
+        long now_sec , now_ms;
+        getTime(&now_sec, &now_ms);
+        tvp = *tv;
+        tvp->tv_sec = nearest->trigger_sec - now_sec;
+         
+        if (nearest->trigger_ms < now_ms) {
+            tvp->tv_usec = ((nearest->trigger_ms+ 1000) - now_ms) * 1000;
+            tvp->tv_sec --;
+        } else{
+            tvp->tv_usec = (nearest->trigger_ms - now_ms) * 1000;
+        }
+    
+        if (tvp->tv_sec < 0) tvp_tv_sec = 0;
+        if (tvp->tv_usec < 0) tvp_tv_usec = 0;
+              
+    } else{
+        if (flags &EVENT_DONT_WAIT) {
+            tv.tv_sec = tv.tv_usec = 0;
+            tvp = &tv;
+        }else {
+            tvp = NULL;
+        }
+        numevents = apiPoll(eventLoop_p, tvp); 
+        int j;
+        for(j = 0, j < numevents, j++){
+            IoEvent * ie = eventLoop_p->events[eventLoop_p->waiting_events[j].fd];
+            int mask = eventLoop_p->waiting_events[j].mask;
+            int fd = eventLoop_p->waiting_events[j].fd;
+            int rfired = 0;
+            if (ie->mask & mask & IO_READABLE){
+                rfired = 1;
+                ie->readCallback(eventLoop_p, fd, ie->clientData, mask) ;
+            }
+
+            if (ie->mask & mask & IO_WRITABLE){
+                if (!rfired  || ie->readCallback != ie->writeCallback){
+                    ie->writeCallback(eventLoop_p, fd, ie->clientData, mask);
+                }
+            }
+            processed ++; 
+        }
+    }
+    if (flags & EVENT_TIME_EVENTS){
+        processed += processTimeEvent(eventLoop_p);
+    }
+    return processed;
+}
+
+
+void eventMain(EventLoop * eventLoop_p ){
+    eventLoop_p->is_stop = 0;
+
+    if (!eventLoop_p->is_stop){
+        if (eventLoop_p->beforeLoopCallback !=NULL) {
+            eventLoop_p->beforeLoopCallback(eventLoop_p);
+        }
+
+        eventProcessEvent(eventLoop_p, EVENT_ALL_EVENTS);
+    }
+}
+
+char * getApiName(void ){
+    return apiName();
+}
+
+void setBeforeSleepCallback(EventLoop *eventLoop_p, beforeLoopCallback * beforeLoopProcess){
+    eventLoop_p->beforeLoopCallback = beforeLoopProcess;
 }
 

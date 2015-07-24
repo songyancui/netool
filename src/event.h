@@ -41,10 +41,10 @@
 
 #define EVENT_IO_EVENTS 1
 #define EVENT_TIME_EVENTS 2
-#define EVENT_ALL_EVENT (EVENT_IO_EVENTS | EVENT_TIME_EVENTS)
+#define EVENT_ALL_EVENTS (EVENT_IO_EVENTS | EVENT_TIME_EVENTS)
 #define EVENT_DONT_WAIT 4
 
-#define EVENT_TIME_CYC 1
+#define EVENT_TIME_NOT_CYC 1
 
 typedef void eventCallback(struct eventLoop*, int, void *, int );
 typedef void timeCallback(struct eventLoop *, int , void *);
