@@ -466,6 +466,8 @@ int main(int argc, const char *argv[])
         ntassert((NET_OK == ntResolve("localhost",ipstr)), "test ntResolve");
         ntassert((NET_OK == ntSocketSetSendBuffer(master_accept_net_fd, 4096)), "test ntSocketSetSendBuffer");
         ntassert((NET_OK == ntTcpNoDelay(master_accept_net_fd)), "test ntTcpNoDelay");
+        close(master_accept_net_fd);
+        close(master_accept_unix_fd);
 
    }else{
         //child process; 
@@ -480,7 +482,7 @@ int main(int argc, const char *argv[])
 
         receive_totlen = 0;
         ntassert(client_connect_net_fd = ntTcpConnect("127.0.0.1", port), "test ntTcpConnect");
-        receive_totlen = ntreadEasyByCount(client_connect_net_fd,recv_msg,20);
+        receive_totlen = ntreadEasyByCount(client_connect_net_fd,recv_msg,15);
         ntassert(receive_totlen == strlen(send_msg), "client net recv msg");
         ntassert(!strcmp(send_msg, recv_msg), "net campare send_msg and recv_msg");
 

@@ -46,17 +46,25 @@
 
 #define EVENT_TIME_NOT_CYC 1
 
+struct eventLoop;
+
 typedef void eventCallback(struct eventLoop*, int, void *, int );
-typedef void timeCallback(struct eventLoop *, int , void *);
+typedef int   timeCallback(struct eventLoop *, int , void *);
 typedef void timeFinalCallback(struct eventLoop*, void *);
 typedef void beforeLoopCallback(struct eventLoop *);
 
 typedef struct ioEvent {
     int mask;
-    eventCallback readCallback;
-    eventCallback writeCallback;
+    eventCallback *readCallback;
+    eventCallback *writeCallback;
     void * clientData;
 } IoEvent;
+
+typedef struct waitingEvent{
+    int fd;
+    int mask;
+
+}WaitingEvent ;
 
 typedef struct timeEvent{
     long long  id; 
@@ -70,7 +78,7 @@ typedef struct timeEvent{
     void *clientData;  //your data
 
     struct timeEvent * next; // list
-}
+}  TimeEvent;
 
 typedef struct eventLoop {
     int maxfd; //the max fd 
@@ -79,7 +87,7 @@ typedef struct eventLoop {
     time_t lastTime;  //the last triggered time 
 
     IoEvent *events;  //this array will be seeked by fd 
-    Ioevent *waiting_events;  // collect all the fired events
+    WaitingEvent *waiting_events;  // collect all the fired events
     TimeEvent * timeEventHead ; 
     int is_stop;
     void *apidata; 

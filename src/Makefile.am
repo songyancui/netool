@@ -14,6 +14,7 @@ netool_SOURCES=main.c \
 		channel.c\
 		net.c\
 		io.c\
+        event.c\
 		third/cJSON/cJSON.c
 		
 

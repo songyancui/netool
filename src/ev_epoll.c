@@ -27,9 +27,13 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/epoll.h>
 #include "mm.h"
 #include "log.h"
+#include "event.h"
 
 typedef struct apiContext{
     int epfd;
@@ -38,7 +42,7 @@ typedef struct apiContext{
 
 
 int apiCreate(EventLoop * eventLoop_p){
-    ApiContext * ac= ntmalloc(sizeof (apiContext));  
+    ApiContext * ac= ntmalloc(sizeof (ApiContext));  
     
     if (ac == NULL){
         ntLogging(LOG_FATAL,"create epoll event error" );
@@ -46,42 +50,42 @@ int apiCreate(EventLoop * eventLoop_p){
         return -1;
     }
 
-    ae->events = ntmalloc(sizeof(epoll_event) * eventLoop_p->volumn_size);
+    ac->events = (struct epoll_event *)ntmalloc(sizeof(struct epoll_event) * eventLoop_p->volumn_size);
 
-    if (ae->events == NULL){
+    if (ac->events == NULL){
         ntLogging(LOG_FATAL,"create epoll event error, malloc events" );
         ntfree(ac);
         return -1;
     }
     
-    stat->epfd = epoll_create(1024); 
-    if (stat->epfd == -1){
-        ntfree(ae->events);
-        ntfree(ae);
+    ac->epfd = epoll_create(1024); 
+    if (ac->epfd == -1){
+        ntfree(ac->events);
+        ntfree(ac);
         ntLogging(LOG_FATAL,"epoll_create failed" );
         return -1;
     }
 
-    eventLoop_p->apiData = ae;
+    eventLoop_p->apidata = ac;
     return 0;
 }
 
 void apiFree(EventLoop *eventLoop_p){
-    apiContext * ac = eventLoop_p->apiData; 
+    ApiContext * ac = eventLoop_p->apidata; 
     ntfree(ac->events);
     close(ac-> epfd);
     ntfree(ac);
 }
 
 int apiAddEvent(EventLoop * eventLoop_p, int fd, int mask){
-    apiContext * ac = eventLoop_p->apiData; 
+    ApiContext * ac = eventLoop_p->apidata; 
     struct epoll_event ee;
 
     int op = eventLoop_p->events[fd].mask == IO_NONE? EPOLL_CTL_ADD:EPOLL_CTL_MOD;
 
     ee.events = 0;
 
-    int mask |= eventLoop_p->events[fd].mask;
+    mask |= eventLoop_p->events[fd].mask;
 
     if (mask & IO_READABLE) ee.events |= EPOLLIN;
     if (mask & IO_WRITABLE) ee.events |= EPOLLOUT;
@@ -93,32 +97,32 @@ int apiAddEvent(EventLoop * eventLoop_p, int fd, int mask){
         return 0;
 }
 
-void apiDelEvent(EventLoop *eventLoop_p, int fd, int mask){
-    apiContext * ac = eventLoop_p->apiData;
+void apiDelEvent(EventLoop *eventLoop_p, int fd, int delmask){
+    ApiContext * ac = eventLoop_p->apidata;
 
     struct epoll_event ee;
-    int op = (eventLoop_p->events[fd].mask & (~mask)) == IO_NONE ? EPOLL_CTL_DEL : EPOLL_CTL_MOD;
+    int op = (eventLoop_p->events[fd].mask & (~delmask)) == IO_NONE ? EPOLL_CTL_DEL : EPOLL_CTL_MOD;
 
     ee.events = 0;
 
-    int mask = eventLoop_p->events[fd].mask & (~mask); 
+    int mask = eventLoop_p->events[fd].mask & (~delmask); 
 
     if (mask & IO_READABLE) ee.events |= EPOLLIN;
     if (mask & IO_WRITABLE) ee.events |= EPOLLOUT;
 
     ee.data.u64 = 0;
     ee.data.fd = fd;
-    epoll_ctl(ac->epfd, op, &ee);
+    epoll_ctl(ac->epfd, op, fd, &ee);
 
 }
 
 int apiPoll(EventLoop * eventLoop_p, struct timeval *tvp){
-    apiContext * ae = eventLoop_p->apidata;
+    ApiContext * ac = eventLoop_p->apidata;
 
     int retval, numevents =0;
     long long time_msc;
-    time_msc = tvp? tvp->tv_sce * 1000 + tvp->tv_usec/1000: -1; 
-    retval = epoll_wait(ae->epfd, ac->events, eventLoop_p->volumn_size, time_msc);
+    time_msc = tvp? tvp->tv_sec * 1000 + tvp->tv_usec/1000: -1; 
+    retval = epoll_wait(ac->epfd, ac->events, eventLoop_p->volumn_size, time_msc);
 
     if (retval > 0){
         int j;
@@ -128,7 +132,7 @@ int apiPoll(EventLoop * eventLoop_p, struct timeval *tvp){
             if (ee->events & EPOLLIN) mask |= IO_READABLE;
             if (ee->events & EPOLLOUT) mask |= IO_WRITABLE;
             if (ee->events & EPOLLERR) mask |= IO_WRITABLE;
-            if (ee->EVENT & EPOLLHUP) mask |= IO_WRITABLE;
+            if (ee->events & EPOLLHUP) mask |= IO_WRITABLE;
 
             eventLoop_p->waiting_events[j].fd = ee->data.fd;
             eventLoop_p->waiting_events[j].mask = mask;

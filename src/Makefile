@@ -94,7 +94,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) test.$(OBJEXT) \
 	mm.$(OBJEXT) adlist.$(OBJEXT) dict.$(OBJEXT) \
 	ntconfig.$(OBJEXT) master.$(OBJEXT) channel.$(OBJEXT) \
-	net.$(OBJEXT) io.$(OBJEXT) cJSON.$(OBJEXT)
+	net.$(OBJEXT) io.$(OBJEXT) event.$(OBJEXT) cJSON.$(OBJEXT)
 netool_OBJECTS = $(am_netool_OBJECTS)
 netool_DEPENDENCIES =
 am_test_OBJECTS = test_main.$(OBJEXT)
@@ -255,6 +255,7 @@ netool_SOURCES = main.c \
 		channel.c\
 		net.c\
 		io.c\
+        event.c\
 		third/cJSON/cJSON.c
 
 test_SOURCES = test_main.c 
@@ -353,6 +354,7 @@ include ./$(DEPDIR)/adlist.Po
 include ./$(DEPDIR)/cJSON.Po
 include ./$(DEPDIR)/channel.Po
 include ./$(DEPDIR)/dict.Po
+include ./$(DEPDIR)/event.Po
 include ./$(DEPDIR)/io.Po
 include ./$(DEPDIR)/log.Po
 include ./$(DEPDIR)/main.Po

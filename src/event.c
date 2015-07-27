@@ -29,15 +29,21 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h> #include "event.h"
+#include <time.h> 
+#include "event.h"
 #include "log.h"
 #include "mm.h"
 #include "net.h"
 
 //TOCSY: have to adapte kernal
+
+#define HAVE_EPOLL
+
 #ifdef HAVE_EPOLL
     #include "ev_epoll.c"
 #else
@@ -52,18 +58,18 @@ EventLoop * ntCreateEventLoop(int volumn_size){
         return NULL; 
     }
 
-    if ((eventLoop_p = ntMalloc(sizeof(EventLoop))) == NULL) {
+    if ((eventLoop_p = (EventLoop *)malloc(sizeof(EventLoop))) == NULL) {
         ntLogging(LOG_FATAL,"malloc EventLoop failed" );
         goto error; 
     }
     
 
-    if ((eventLoop_p->events = ntMalloc(sizeof(IoEvent) * volumn_size)) == NULL) {
+    if ((eventLoop_p->events = (IoEvent *)ntmalloc(sizeof(IoEvent) * volumn_size)) == NULL) {
         ntLogging(LOG_FATAL,"malloc EventLoop->events failed" );
         goto error; 
     }
 
-    if ((eventLoop_p->waiting_events = ntMalloc(sizeof(IoEvent) * volumn_size)) == NULL) {
+    if ((eventLoop_p->waiting_events = (WaitingEvent  *)ntmalloc(sizeof(WaitingEvent ) * volumn_size)) == NULL) {
         ntLogging(LOG_FATAL,"malloc EventLoop->waiting_events failed" );
         goto error; 
     }
@@ -77,7 +83,7 @@ EventLoop * ntCreateEventLoop(int volumn_size){
     eventLoop_p->timeEventHead = NULL;
 
     eventLoop_p->is_stop = 0;
-    eventLoop_p->beforeLoopCallback = NULL;
+    eventLoop_p->beforeLoop = NULL;
 
     if (apiCreate(eventLoop_p) == -1){
         ntLogging(LOG_FATAL,"canot create api loop " );
@@ -87,6 +93,8 @@ EventLoop * ntCreateEventLoop(int volumn_size){
     int i;
     for(i=0; i < volumn_size; i++)
         eventLoop_p->events[i].mask = IO_NONE;
+
+    return eventLoop_p; 
 
     error:
         if (eventLoop_p){
@@ -99,19 +107,20 @@ EventLoop * ntCreateEventLoop(int volumn_size){
 }
 
 
-void delEventLoop(EventLoop * eventLoop_p){
+int  delEventLoop(EventLoop * eventLoop_p){
     apiFree(eventLoop_p);
     ntfree(eventLoop_p->events);
     ntfree(eventLoop_p->waiting_events);
     ntfree(eventLoop_p);
+    return EVENT_OK;
 }
 
-void eventStop(EventLoop * eventLoop_p){
+int eventStop(EventLoop * eventLoop_p){
     eventLoop_p->is_stop = 1;
+    return EVENT_OK;
 }
 
 int createIoEvent(EventLoop * eventLoop_p, int fd, int mask,eventCallback *callback , void * clientData){
-
     if (fd > eventLoop_p->volumn_size) {
         return EVENT_ERR;
     }
@@ -175,13 +184,14 @@ void addMilsec2Now(long long milsec, long *sec, long *ms){
     
     when_sec = cur_sec + milsec / 1000;
     when_ms = cur_ms + milsec % 1000;
-if (when_ms > 1000){ when_sec ++; when_ms -= 1000; } *sec = when_sec;
+    if (when_ms > 1000){ when_sec ++; when_ms -= 1000; } 
+    *sec = when_sec;
     *ms = when_ms;
 }
 
 
 long long  createTimeEvent( EventLoop *eventLoop_p, long long millsec, timeCallback proc,void * clientData, timeFinalCallback finalProc ){
-    long long id = eventLoop_p->timeEventNextId++
+    long long id = eventLoop_p->timeEventNextId++;
     long sec, ms;
     TimeEvent  * timeEvent_p ;
     timeEvent_p = ntmalloc(sizeof (TimeEvent));
@@ -193,18 +203,19 @@ long long  createTimeEvent( EventLoop *eventLoop_p, long long millsec, timeCallb
     addMilsec2Now(millsec, &sec, &ms); 
     timeEvent_p-> id = id;
     timeEvent_p->timeCallback = proc;
-    timeEvent_t->timeFinalCallback = finalProc;
+    timeEvent_p->timeFinalCallback = finalProc;
     timeEvent_p->trigger_sec = sec;
     timeEvent_p->trigger_ms = ms;
-    timeEvent_p->clienData = clientData;
+    timeEvent_p->clientData = clientData;
     
     timeEvent_p->next = eventLoop_p->timeEventHead ;
     eventLoop_p->timeEventHead = timeEvent_p;
     return id;
 }
 
+//TOCSY :o(n)
 int delTimeEvent(EventLoop * eventLoop_p, long long  id){
-    TimeEvent * te, prev;
+    TimeEvent * te, *prev;
     prev = NULL;
     te = eventLoop_p->timeEventHead; 
     while(te){
@@ -227,8 +238,8 @@ int delTimeEvent(EventLoop * eventLoop_p, long long  id){
 }
 
 //TOCSY:O(n)  need to optimaze 
-static getNearestTime(EventLoop * eventLoop_p){
-   TimeEvent * te, nearest ; 
+TimeEvent *  getNearestTime(EventLoop * eventLoop_p){
+   TimeEvent * te = NULL, *nearest = NULL ; 
 
     te = eventLoop_p->timeEventHead;
     while(te){
@@ -255,13 +266,13 @@ int processTimeEvent(EventLoop * eventLoop_p){
         if (te->id > maxId)
             continue;
         getTime(&now_sec, &now_ms);
-        if (te->trigger_sec < new_sec || (te->trigger_sec == new_sec && te->trigger_ms < now_ms)){
+        if (te->trigger_sec < now_sec || (te->trigger_sec == now_sec && te->trigger_ms < now_ms)){
             int retval;
             id = te->id;
-            retval = te->timeCallback(eventLoop_p, id, clientData);  
+            retval = te->timeCallback(eventLoop_p, id, te->clientData);  
             processed ++;
-            if (retval == EVENT_TIME_NOT_CYC){
-                addMilsec2Now(retval, te->trigger_sec, te->trigger_ms) ;
+            if (retval != EVENT_TIME_NOT_CYC){
+                addMilsec2Now(retval, &te->trigger_sec, &te->trigger_ms) ;
             }else{
                 delTimeEvent(eventLoop_p, id);     
             }
@@ -295,12 +306,12 @@ int processEvents(EventLoop * eventLoop_p, int flags){
     TimeEvent * nearest = NULL;
 
     if ((flags& EVENT_TIME_EVENTS) && !(flags & EVENT_DONT_WAIT)){
-        nearest = getNearestTime(); 
+        nearest = getNearestTime(eventLoop_p); 
     }
     if (nearest){
         long now_sec , now_ms;
         getTime(&now_sec, &now_ms);
-        tvp = *tv;
+        tvp = &tv;
         tvp->tv_sec = nearest->trigger_sec - now_sec;
          
         if (nearest->trigger_ms < now_ms) {
@@ -310,8 +321,8 @@ int processEvents(EventLoop * eventLoop_p, int flags){
             tvp->tv_usec = (nearest->trigger_ms - now_ms) * 1000;
         }
     
-        if (tvp->tv_sec < 0) tvp_tv_sec = 0;
-        if (tvp->tv_usec < 0) tvp_tv_usec = 0;
+        if (tvp->tv_sec < 0) tvp->tv_sec = 0;
+        if (tvp->tv_usec < 0) tvp->tv_usec = 0;
               
     } else{
         if (flags &EVENT_DONT_WAIT) {
@@ -322,8 +333,8 @@ int processEvents(EventLoop * eventLoop_p, int flags){
         }
         numevents = apiPoll(eventLoop_p, tvp); 
         int j;
-        for(j = 0, j < numevents, j++){
-            IoEvent * ie = eventLoop_p->events[eventLoop_p->waiting_events[j].fd];
+        for(j = 0; j < numevents; j++){
+            IoEvent * ie = &eventLoop_p->events[eventLoop_p->waiting_events[j].fd];
             int mask = eventLoop_p->waiting_events[j].mask;
             int fd = eventLoop_p->waiting_events[j].fd;
             int rfired = 0;
@@ -347,23 +358,111 @@ int processEvents(EventLoop * eventLoop_p, int flags){
 }
 
 
-void eventMain(EventLoop * eventLoop_p ){
+int eventMain(EventLoop * eventLoop_p ){
     eventLoop_p->is_stop = 0;
-
-    if (!eventLoop_p->is_stop){
-        if (eventLoop_p->beforeLoopCallback !=NULL) {
-            eventLoop_p->beforeLoopCallback(eventLoop_p);
+    while (!eventLoop_p->is_stop){
+        if (eventLoop_p->beforeLoop !=NULL) {
+            eventLoop_p->beforeLoop(eventLoop_p);
         }
 
-        eventProcessEvent(eventLoop_p, EVENT_ALL_EVENTS);
+        processEvents(eventLoop_p, EVENT_ALL_EVENTS);
     }
+
+    return EVENT_OK;
 }
 
-char * getApiName(void ){
+char * getApiName(void){
     return apiName();
 }
 
 void setBeforeSleepCallback(EventLoop *eventLoop_p, beforeLoopCallback * beforeLoopProcess){
-    eventLoop_p->beforeLoopCallback = beforeLoopProcess;
+    eventLoop_p->beforeLoop = beforeLoopProcess;
 }
 
+#ifdef TEST 
+#include "test.h"
+#include "io.h"
+#include "log.h"
+
+int testTimeCallback(EventLoop * eventLoop_p, int id, void * clientData){
+    ntassert(1, "test  timeCallback");
+    return EVENT_TIME_NOT_CYC;
+}
+
+void testTimeFinalCallback(EventLoop * eventLoop_p, void * clientData){
+    ntassert(1, "test timeFinalCallback"); 
+    ntassert(EVENT_OK == eventStop(eventLoop_p), "test eventStop ");
+}
+
+void writeCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
+    ntassert(1, "in write callback");
+    ntassert(2 == ntwriteEasyByCount(fd,"OK", 2), "write resp msg completely");
+    mask |= IO_READABLE|IO_WRITABLE;
+    ntassert(EVENT_OK == delIoEvent(eventLoop_p, fd, mask), "delIoEvent complete");
+    long long timeId = -1;
+    ntassert((timeId = createTimeEvent(eventLoop_p, 1000, testTimeCallback,NULL, testTimeFinalCallback ))> -1, "test createTimeEvent ");  
+        
+}
+
+void readCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
+    ntassert(1, "in readCallback");
+    char * send_msg = "master_send_msg";
+    char recv_str[15];
+    int recv_totlen;
+    recv_totlen = ntreadEasyByCount(fd,recv_str, 15 );
+    ntassert(!strcmp(recv_str, send_msg), "recv and send is same");
+    mask |= IO_WRITABLE;
+    createIoEvent(eventLoop_p, fd, mask, writeCallback, NULL);
+}
+
+
+void acceptCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
+    ntassert(1, "in accept Callback");
+    int client_fd= 0;
+    client_fd = ntUnixAccept(fd);
+    int client_mask;
+    client_mask |= IO_READABLE;
+    createIoEvent(eventLoop_p, client_fd, client_mask, readCallback, NULL);    
+}
+
+
+int main(int argc, const char *argv[])
+{
+    ntLogInit(LOG_DEBUG, NULL); 
+    int master_listen_net_fd , master_accept_net_fd, client_connect_net_fd;  
+    int port = TEST_PORT; 
+    char recv_msg[20] ;
+    char * send_msg = "master_send_msg";
+    int pid;
+
+    if ((pid = fork())> 0) {
+        master_listen_net_fd = ntTcpServer(port,NULL); 
+        ntSockSetReuseAddr(master_listen_net_fd);
+        EventLoop *eventLoop_p = ntCreateEventLoop(1024); 
+        int mask = 0;
+        mask |= IO_READABLE;
+
+        ntassert(1 ,"master accept add event");
+        ntassert(EVENT_OK == createIoEvent(eventLoop_p, master_listen_net_fd,mask,acceptCallback,NULL), "createIoEvent successfully");
+
+
+        ntassert(EVENT_OK == eventMain(eventLoop_p), "test eventMain"); 
+        ntassert(EVENT_OK == delEventLoop(eventLoop_p), "test eventStop");
+        
+
+    } else {
+        ntassert(1 ,"client test");
+        sleep(1);
+        client_connect_net_fd = ntTcpConnect("127.0.0.1", port);
+        int send_totlen;
+        int recv_totlen;
+        send_totlen = ntwriteEasyByCount(client_connect_net_fd, send_msg, strlen(send_msg));
+        ntassert((send_totlen == strlen(send_msg)), "client send msg completely " );
+        recv_totlen = ntreadEasyByCount(client_connect_net_fd,  recv_msg, 2) ;
+        ntassert(recv_totlen == 2, "client recv msg OK");
+        ntassert(!strncmp(recv_msg, "OK", 2), "client recv msg correctly");
+    }
+    
+    return 0;
+}
+#endif
