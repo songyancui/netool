@@ -27,64 +27,38 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "log.h"
-#include "master.h"
-#include "channel.h"
-#include "mm.h"
 
 
-char *_master_status[5]={"MASTER_STATUS_PREPARE","MASTER_STATUS_RUNNING","MASTER_STATUS_STOPING","MASTER_STATUS_STOPED","MASTER_STATUS_CHANGE_CONFIG"};
-#define MTSTATUS(n) _master_status[n]
+#ifndef __MODE_H
+#define __MODE_H
 
+#define  MODE_OK 0 
+#define MODE_ERR -1
 
-char * _master_command[3]={"MASTER_COMMANDED_STOP","MASTER_COMMANDED_START","MASTER_COMMANDED_CHANGE_CONFIG"};
-#define MC2STR(n) _master_command[n]
-
-Master * createMaster(){
-	Master *master_p;
-    Channel * channel_p;
-    master_p = ntmalloc(sizeof (Master));
-    if (master_p == NULL){
-        ntLogging(LOG_FATAL, "create master failed");        
-        exit(-1);
-    }
-    
-    master_p->status = MASTER_STATUS_PREPARE;
-    ntLogging(LOG_DEBUG,"master status: %s",MTSTATUS(master_p->status));
-    master_p->pid = getpid();
-
-    channel_p = create_channel();
-    if (channel_p == NULL){
-        ntfree(master_p);
-        return NULL;
-    }
-      
-    
-    return master_p;
-}
-
-int	runMaster(Master * m){
-	ntLogging(LOG_DEBUG,"%s","master_running");
-	ntLogging(LOG_DEBUG,"%s %d","master_runing",m->channel->fd[1]);
-	Inner_msg inner_msg;
-	receive_msg_channel(m->channel->fd[1],&inner_msg);	
-	ntLogging(LOG_DEBUG,"%s recieved %d","master_runed",inner_msg.command);
-}
-
-#ifdef TEST
-#include "test.h" 
-
-int main(int argc, const char *argv[])
-{
-    Master * master_p = master_create();
-    ntassert_not_NULL(master_p, "master_create");
-
-
-    return 0;
-}
+#ifdef MULTI 
+    #define CURRENT_MODE mulit
+    #define CURRENT_MODE_STRUCT_P &mode_multi
+#else    
+//type is SINGLE
+    #define CURRENT_MODE single
+    #define CURRENT_MODE_STRUCT_P &mode_single
 #endif
+
+typedef struct mode{
+	char * mode_name ;
+
+	void * (* _mode_init)(struct mode * mode_p);  //it will run when  mode init
+	int  (*_mode_end)(struct mode * mode_p);                //run when the mode canceled
+	void (*_mode_process)(struct mode * mode_p); //callback it when start mode  
+    void * mode_data;
+    void (* mode_data_del)(void * );
+}Mode  ;
+
+Mode * createMode();
+
+int initMode(Mode * mode_p);
+int runMode(Mode * mode_p);
+int delMode(Mode *mode_p);
+
+
+#endif 

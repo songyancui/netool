@@ -93,8 +93,9 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) test.$(OBJEXT) \
 	mm.$(OBJEXT) adlist.$(OBJEXT) dict.$(OBJEXT) \
-	ntconfig.$(OBJEXT) master.$(OBJEXT) channel.$(OBJEXT) \
-	net.$(OBJEXT) io.$(OBJEXT) event.$(OBJEXT) cJSON.$(OBJEXT)
+	ntconfig.$(OBJEXT) master.$(OBJEXT) worker.$(OBJEXT) \
+	channel.$(OBJEXT) net.$(OBJEXT) io.$(OBJEXT) event.$(OBJEXT) \
+	mode.$(OBJEXT) cJSON.$(OBJEXT)
 netool_OBJECTS = $(am_netool_OBJECTS)
 netool_DEPENDENCIES =
 am_test_OBJECTS = test_main.$(OBJEXT)
@@ -252,10 +253,12 @@ netool_SOURCES = main.c \
 		dict.c\
 		ntconfig.c\
 		master.c\
+        worker.c\
 		channel.c\
 		net.c\
 		io.c\
         event.c\
+        modes/mode.c\
 		third/cJSON/cJSON.c
 
 test_SOURCES = test_main.c 
@@ -360,10 +363,12 @@ include ./$(DEPDIR)/log.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/master.Po
 include ./$(DEPDIR)/mm.Po
+include ./$(DEPDIR)/mode.Po
 include ./$(DEPDIR)/net.Po
 include ./$(DEPDIR)/ntconfig.Po
 include ./$(DEPDIR)/test.Po
 include ./$(DEPDIR)/test_main.Po
+include ./$(DEPDIR)/worker.Po
 
 .c.o:
 	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -378,6 +383,20 @@ include ./$(DEPDIR)/test_main.Po
 #	$(AM_V_CC)source='$<' object='$@' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+mode.o: modes/mode.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mode.o -MD -MP -MF $(DEPDIR)/mode.Tpo -c -o mode.o `test -f 'modes/mode.c' || echo '$(srcdir)/'`modes/mode.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/mode.Tpo $(DEPDIR)/mode.Po
+#	$(AM_V_CC)source='modes/mode.c' object='mode.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mode.o `test -f 'modes/mode.c' || echo '$(srcdir)/'`modes/mode.c
+
+mode.obj: modes/mode.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mode.obj -MD -MP -MF $(DEPDIR)/mode.Tpo -c -o mode.obj `if test -f 'modes/mode.c'; then $(CYGPATH_W) 'modes/mode.c'; else $(CYGPATH_W) '$(srcdir)/modes/mode.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/mode.Tpo $(DEPDIR)/mode.Po
+#	$(AM_V_CC)source='modes/mode.c' object='mode.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mode.obj `if test -f 'modes/mode.c'; then $(CYGPATH_W) 'modes/mode.c'; else $(CYGPATH_W) '$(srcdir)/modes/mode.c'; fi`
 
 cJSON.o: third/cJSON/cJSON.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cJSON.o -MD -MP -MF $(DEPDIR)/cJSON.Tpo -c -o cJSON.o `test -f 'third/cJSON/cJSON.c' || echo '$(srcdir)/'`third/cJSON/cJSON.c

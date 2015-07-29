@@ -29,62 +29,62 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
-#include "log.h"
-#include "master.h"
-#include "channel.h"
-#include "mm.h"
+#include "mode.h"
+#include "../log.h"
+#include "../dict.h"
+#include "mode_single.c"
 
+Mode * createMode(){
+    Mode* mode_p = NULL;
 
-char *_master_status[5]={"MASTER_STATUS_PREPARE","MASTER_STATUS_RUNNING","MASTER_STATUS_STOPING","MASTER_STATUS_STOPED","MASTER_STATUS_CHANGE_CONFIG"};
-#define MTSTATUS(n) _master_status[n]
+   mode_p = CURRENT_MODE_STRUCT_P;
 
-
-char * _master_command[3]={"MASTER_COMMANDED_STOP","MASTER_COMMANDED_START","MASTER_COMMANDED_CHANGE_CONFIG"};
-#define MC2STR(n) _master_command[n]
-
-Master * createMaster(){
-	Master *master_p;
-    Channel * channel_p;
-    master_p = ntmalloc(sizeof (Master));
-    if (master_p == NULL){
-        ntLogging(LOG_FATAL, "create master failed");        
-        exit(-1);
-    }
-    
-    master_p->status = MASTER_STATUS_PREPARE;
-    ntLogging(LOG_DEBUG,"master status: %s",MTSTATUS(master_p->status));
-    master_p->pid = getpid();
-
-    channel_p = create_channel();
-    if (channel_p == NULL){
-        ntfree(master_p);
+    if (mode_p == NULL){
+        ntLogging(LOG_FATAL,"malloc mode failed" );
         return NULL;
     }
-      
+    return mode_p;
+}
+
+int initMode(Mode * mode_p){
+    if (mode_p == NULL){
+        return MODE_ERR;
+    }
+
+    if (mode_p->_mode_init == NULL){
+        return MODE_OK;
+    }
+
+    if (MODE_OK != mode_p->_mode_init(mode_p)){
+        ntLogging(LOG_FATAL,"mode_init failed" );
+        return MODE_ERR;
+    }
+
+    return MODE_OK;
+}
+
+int runMode(Mode * mode_p){
+    if(mode_p==NULL){
+        ntLogging(LOG_FATAL,"run mode failed, mode_p is NULL ");
+        return MODE_ERR;
+    }
     
-    return master_p;
+    mode_p->_mode_process(mode_p);
+    return MODE_OK;
 }
 
-int	runMaster(Master * m){
-	ntLogging(LOG_DEBUG,"%s","master_running");
-	ntLogging(LOG_DEBUG,"%s %d","master_runing",m->channel->fd[1]);
-	Inner_msg inner_msg;
-	receive_msg_channel(m->channel->fd[1],&inner_msg);	
-	ntLogging(LOG_DEBUG,"%s recieved %d","master_runed",inner_msg.command);
+int delMode(Mode *mode_p){
+
+
+    if (mode_p != NULL && mode_p->_mode_end != NULL){
+        mode_p->_mode_end(mode_p);
+        ntfree(mode_p);
+        return MODE_OK; 
+    }
+    if (mode_p->_mode_end == NULL){
+        ntfree(mode_p);
+        return MODE_OK;
+    }
+    return MODE_ERR;
 }
-
-#ifdef TEST
-#include "test.h" 
-
-int main(int argc, const char *argv[])
-{
-    Master * master_p = master_create();
-    ntassert_not_NULL(master_p, "master_create");
-
-
-    return 0;
-}
-#endif

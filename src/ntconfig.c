@@ -70,6 +70,7 @@ int ntConfigInit(char * path){
 		g_server_config.host = ip_num;
 		ntLogging(LOG_WARNING, "%s","load the  default config[ip]");
 	}
+    value = NULL;
 
 	valueInt = cJSON_GetObjectItem (config, "port")->valueint;
 	if(valueInt){
@@ -104,6 +105,15 @@ int ntConfigInit(char * path){
 	}
 	valueInt = -1;
 
+	value = cJSON_GetObjectItem(config, "mode")->valuestring;
+	if(value){
+        strcpy(g_server_config.mode, value );
+		ntLogging(LOG_DEBUG, "%s","load the config[mode]");
+    }else{
+        strcpy(g_server_config.mode,"single");
+        ntLogging(LOG_WARNING,"there is no mode , default single" );
+    }
+    
 	return 1;
 	
 }
@@ -112,5 +122,4 @@ int ntConfigDestroy(){
 	ntLogging(LOG_DEBUG,"%s","config destructed \n");
 	//TODO
 }
-
 

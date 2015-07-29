@@ -41,8 +41,8 @@
 
 #define EVENT_IO_EVENTS 1
 #define EVENT_TIME_EVENTS 2
-#define EVENT_ALL_EVENTS (EVENT_IO_EVENTS | EVENT_TIME_EVENTS)
-#define EVENT_DONT_WAIT 4
+#define EVENT_ALL_EVENTS (EVENT_IO_EVENTS | EVENT_TIME_EVENTS) 
+#define EVENT_DONT_WAIT 4 
 
 #define EVENT_TIME_NOT_CYC 1
 
@@ -94,6 +94,23 @@ typedef struct eventLoop {
 
     beforeLoopCallback* beforeLoop;
 } EventLoop;
+
+EventLoop * ntCreateEventLoop(int volumn_size);
+int  delEventLoop(EventLoop * eventLoop_p);
+int eventStop(EventLoop * eventLoop_p);
+int createIoEvent(EventLoop * eventLoop_p, int fd, int mask,eventCallback *callback , void * clientData);
+int delIoEvent(EventLoop * eventLoop_p, int fd, int mask);
+int getIoEvent(EventLoop * eventLoop_p, int fd);
+void getTime(long *sec, long *milsec);
+void addMilsec2Now(long long milsec, long *sec, long *ms);
+long long  createTimeEvent( EventLoop *eventLoop_p, long long millsec, timeCallback proc,void * clientData, timeFinalCallback finalProc );
+int delTimeEvent(EventLoop * eventLoop_p, long long  id);
+TimeEvent *  getNearestTime(EventLoop * eventLoop_p);
+int processTimeEvent(EventLoop * eventLoop_p);
+int processEvents(EventLoop * eventLoop_p, int flags);
+int eventMain(EventLoop * eventLoop_p );
+char * getApiName(void);
+void setBeforeSleepCallback(EventLoop *eventLoop_p, beforeLoopCallback * beforeLoopProcess);
 
 
 #endif /* end of include guard: EVENT_H */

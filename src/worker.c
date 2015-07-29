@@ -21,7 +21,7 @@
 * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
 * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN	
+* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN   
 * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
@@ -29,62 +29,49 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 #include "log.h"
-#include "master.h"
-#include "channel.h"
 #include "mm.h"
+#include "channel.h"
+#include "net.h"
+
+#include "worker.h"
 
 
-char *_master_status[5]={"MASTER_STATUS_PREPARE","MASTER_STATUS_RUNNING","MASTER_STATUS_STOPING","MASTER_STATUS_STOPED","MASTER_STATUS_CHANGE_CONFIG"};
-#define MTSTATUS(n) _master_status[n]
-
-
-char * _master_command[3]={"MASTER_COMMANDED_STOP","MASTER_COMMANDED_START","MASTER_COMMANDED_CHANGE_CONFIG"};
-#define MC2STR(n) _master_command[n]
-
-Master * createMaster(){
-	Master *master_p;
-    Channel * channel_p;
-    master_p = ntmalloc(sizeof (Master));
-    if (master_p == NULL){
-        ntLogging(LOG_FATAL, "create master failed");        
-        exit(-1);
-    }
-    
-    master_p->status = MASTER_STATUS_PREPARE;
-    ntLogging(LOG_DEBUG,"master status: %s",MTSTATUS(master_p->status));
-    master_p->pid = getpid();
-
-    channel_p = create_channel();
-    if (channel_p == NULL){
-        ntfree(master_p);
+Worker *  createWorker(int id, Channel * order_channel){
+    Worker * wp;
+    wp = ntmalloc(sizeof (Worker));
+    if (wp == NULL){
+        ntLogging(LOG_FATAL,"create worker failed");
         return NULL;
     }
-      
     
-    return master_p;
+    if (WORKER_ERR == initWorker(wp, id, order_channel)){
+        ntLogging(LOG_FATAL,"create worker failed");
+        return NULL;
+    }
+
+    return wp;
 }
 
-int	runMaster(Master * m){
-	ntLogging(LOG_DEBUG,"%s","master_running");
-	ntLogging(LOG_DEBUG,"%s %d","master_runing",m->channel->fd[1]);
-	Inner_msg inner_msg;
-	receive_msg_channel(m->channel->fd[1],&inner_msg);	
-	ntLogging(LOG_DEBUG,"%s recieved %d","master_runed",inner_msg.command);
+int initWorker(Worker *wp, int id, Channel * order_channel){
+   
+    if (wp == NULL){
+        return WORKER_ERR; 
+    }
+    wp->worker_id = id;
+    wp->order_channel = order_channel ;
+    
+    if ((wp->eventLoop_p = ntCreateEventLoop(EVENTLOOP_VOLUMN_SIZE)) == NULL){
+         ntLogging(LOG_FATAL,"worker create eventLoop failed");
+        return WORKER_ERR;
+    }
+
+    return WORKER_OK;
+
 }
 
-#ifdef TEST
-#include "test.h" 
 
-int main(int argc, const char *argv[])
-{
-    Master * master_p = master_create();
-    ntassert_not_NULL(master_p, "master_create");
-
-
-    return 0;
+void delWorker(Worker * wp){
+   //TOCSY 
 }
-#endif

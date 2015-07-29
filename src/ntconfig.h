@@ -11,6 +11,7 @@ typedef struct server_config{
         char  type[64];
         int master_count;
         int worker_count;
+        char mode[10];
 } Server_config ;
 
 /*

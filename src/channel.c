@@ -46,6 +46,10 @@
 Channel *create_channel(){
 	Channel * channel_ptr;
 	channel_ptr  = ntmalloc(sizeof(Channel));
+    if (channel_ptr == NULL){
+        ntLogging(LOG_WARNING,"channel create failed");
+        return NULL;
+    }
 	ntmemset(channel_ptr,0,sizeof(Channel));
 	if(socketpair(AF_UNIX, SOCK_STREAM,0 ,channel_ptr->fd)<0){
 		ntLogging(LOG_FATAL,"%s","create channel failed");

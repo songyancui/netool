@@ -132,8 +132,7 @@ int echo_done(Task *task, Echo_message *echo_message_ptr){
 }
 
 
-Module echo_module = {
-	"echo",
+Module echo_module = { "echo",
 	event_base *event_base_ptr,
 	
 	echo_construct,

@@ -58,7 +58,7 @@ EventLoop * ntCreateEventLoop(int volumn_size){
         return NULL; 
     }
 
-    if ((eventLoop_p = (EventLoop *)malloc(sizeof(EventLoop))) == NULL) {
+    if ((eventLoop_p = (EventLoop *)ntmalloc(sizeof(EventLoop))) == NULL) {
         ntLogging(LOG_FATAL,"malloc EventLoop failed" );
         goto error; 
     }
@@ -405,12 +405,8 @@ void writeCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, in
 }
 
 void readCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
-    ntassert(1, "in readCallback");
-    char * send_msg = "master_send_msg";
-    char recv_str[15];
     int recv_totlen;
     recv_totlen = ntreadEasyByCount(fd,recv_str, 15 );
-    ntassert(!strcmp(recv_str, send_msg), "recv and send is same");
     mask |= IO_WRITABLE;
     createIoEvent(eventLoop_p, fd, mask, writeCallback, NULL);
 }

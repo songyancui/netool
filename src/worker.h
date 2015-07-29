@@ -21,49 +21,33 @@
 * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
 * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN	
+* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN   
 * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef WORKER_H
 
-#ifndef __MASTER_H
-#define __MASTER_H
+#define WORKER_H
 
-#include <sys/types.h>
+#define WORKER_ERR -1
+#define WORKER_OK 0
+
+#include "event.h"
 #include "channel.h"
 
-typedef struct master{
-	pid_t pid;
-	int master_id;
-	int status;
-	Channel *channel;   //use for communicating
-} Master ;
+#define EVENTLOOP_VOLUMN_SIZE 1024
 
-/*
- *API
- */
+typedef struct worker{
+    int worker_id;
+    Channel *order_channel;
+    EventLoop * eventLoop_p;
+    int status;
+} Worker ;
 
- /*  Master status  */
-#define MASTER_STATUS_PREPARE 0
-#define MASTER_STATUS_RUNNING 1
-#define MASTER_STATUS_STOPING 2
-#define MASTER_STATUS_STOPED  3
-#define MASTER_STATUS_CHANGE_CONFIG 4
-/* Controller process Orders the Worders within Commands below*/
-#define MASTER_COMMANDED_STOP 0
-#define MASTER_COMMANDED_START 1
-#define MASTER_COMMANDED_CHANGE_CONFIG 2
+Worker *  createWorker(int id, Channel * order_channel);
+int initWorker(Worker *wp, int id, Channel * order_channel);
+void delWorker(Worker *wp);
 
- /*
-  * API  
-  */
- 
-	Master * createMaster();
-	int runMaster();
-	int master_stop(Master *m, int soft);
-
-
-	
-#endif /*end __MASTER_H  */
+#endif /* end of include guard: WORKER_H */

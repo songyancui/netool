@@ -31,7 +31,7 @@
 #define NET_H
 #include "net.h"
 
-#define NET_OK 1
+#define NET_OK 0 
 #define NET_ERR -1
 #define LISTEN_BACKLOG 1024
 

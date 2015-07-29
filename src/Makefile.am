@@ -11,10 +11,12 @@ netool_SOURCES=main.c \
 		dict.c\
 		ntconfig.c\
 		master.c\
+        worker.c\
 		channel.c\
 		net.c\
 		io.c\
         event.c\
+        modes/mode.c\
 		third/cJSON/cJSON.c
 		
 

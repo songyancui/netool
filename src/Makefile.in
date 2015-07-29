@@ -93,8 +93,9 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) test.$(OBJEXT) \
 	mm.$(OBJEXT) adlist.$(OBJEXT) dict.$(OBJEXT) \
-	ntconfig.$(OBJEXT) master.$(OBJEXT) channel.$(OBJEXT) \
-	net.$(OBJEXT) io.$(OBJEXT) event.$(OBJEXT) cJSON.$(OBJEXT)
+	ntconfig.$(OBJEXT) master.$(OBJEXT) worker.$(OBJEXT) \
+	channel.$(OBJEXT) net.$(OBJEXT) io.$(OBJEXT) event.$(OBJEXT) \
+	mode.$(OBJEXT) cJSON.$(OBJEXT)
 netool_OBJECTS = $(am_netool_OBJECTS)
 netool_DEPENDENCIES =
 am_test_OBJECTS = test_main.$(OBJEXT)
@@ -252,10 +253,12 @@ netool_SOURCES = main.c \
 		dict.c\
 		ntconfig.c\
 		master.c\
+        worker.c\
 		channel.c\
 		net.c\
 		io.c\
         event.c\
+        modes/mode.c\
 		third/cJSON/cJSON.c
 
 test_SOURCES = test_main.c 
@@ -360,10 +363,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/master.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntconfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/worker.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -378,6 +383,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+mode.o: modes/mode.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mode.o -MD -MP -MF $(DEPDIR)/mode.Tpo -c -o mode.o `test -f 'modes/mode.c' || echo '$(srcdir)/'`modes/mode.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mode.Tpo $(DEPDIR)/mode.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='modes/mode.c' object='mode.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mode.o `test -f 'modes/mode.c' || echo '$(srcdir)/'`modes/mode.c
+
+mode.obj: modes/mode.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mode.obj -MD -MP -MF $(DEPDIR)/mode.Tpo -c -o mode.obj `if test -f 'modes/mode.c'; then $(CYGPATH_W) 'modes/mode.c'; else $(CYGPATH_W) '$(srcdir)/modes/mode.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mode.Tpo $(DEPDIR)/mode.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='modes/mode.c' object='mode.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mode.obj `if test -f 'modes/mode.c'; then $(CYGPATH_W) 'modes/mode.c'; else $(CYGPATH_W) '$(srcdir)/modes/mode.c'; fi`
 
 cJSON.o: third/cJSON/cJSON.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cJSON.o -MD -MP -MF $(DEPDIR)/cJSON.Tpo -c -o cJSON.o `test -f 'third/cJSON/cJSON.c' || echo '$(srcdir)/'`third/cJSON/cJSON.c
