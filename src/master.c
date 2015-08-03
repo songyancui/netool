@@ -71,9 +71,9 @@ Master * createMaster(){
 int	runMaster(Master * m){
 	ntLogging(LOG_DEBUG,"%s","master_running");
 	ntLogging(LOG_DEBUG,"%s %d","master_runing",m->channel->fd[1]);
-	Inner_msg inner_msg;
-	receive_msg_channel(m->channel->fd[1],&inner_msg);	
-	ntLogging(LOG_DEBUG,"%s recieved %d","master_runed",inner_msg.command);
+	Order_msg order_msg;
+	receive_msg_channel(m->channel->fd[1],&order_msg);	
+	ntLogging(LOG_DEBUG,"%s recieved %d","master_runed",order_msg.command);
 }
 
 #ifdef TEST

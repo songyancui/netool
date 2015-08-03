@@ -21,29 +21,25 @@
 * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
 * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN	
+* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN   
 * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef __CHANNEL_H
-#define __CHANNEL_H
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
-typedef struct order_msg{
-	int status;
-	int command;
-}Order_msg;
+typedef enum{
+    MSG_STAT_EMPTY = 0,  
+    MSG_STAT_PROCESSING,
+} msg_stat_t;
+
+typedef struct inner_message{
+    msg_stat_t status; // mark data status 
+    int data_len;
+    void * data; 
+}Inner_message ;
 
 
-typedef struct channel {
-	int fd[2];
-} Channel;
 
-Channel *create_channel();
-int receive_msg_channel(int fd,Order_msg *msg);
-int send_msg_channel(int fd ,Order_msg * msg);
-int close_channel(Channel * channel_ptr);
-int ntread(int fd, void * ptr);
-int ntwrite(int fd, void * ptr);
-
-#endif /* __CHANNEL_H */
+#endif /* end of include guard: MESSAGE_H */

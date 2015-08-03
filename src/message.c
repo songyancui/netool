@@ -21,29 +21,38 @@
 * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
 * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN	
+* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN   
 * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef __CHANNEL_H
-#define __CHANNEL_H
-
-typedef struct order_msg{
-	int status;
-	int command;
-}Order_msg;
 
 
-typedef struct channel {
-	int fd[2];
-} Channel;
+#include "message.h"
+#include "mm.h"
+#include "log.h"
 
-Channel *create_channel();
-int receive_msg_channel(int fd,Order_msg *msg);
-int send_msg_channel(int fd ,Order_msg * msg);
-int close_channel(Channel * channel_ptr);
-int ntread(int fd, void * ptr);
-int ntwrite(int fd, void * ptr);
 
-#endif /* __CHANNEL_H */
+Inner_message * createInnnerMessage(){
+    Inner_message * im; 
+    if ((im = ntmalloc(sizeof(message.h))) == NULL) {
+        ntLogging(LOG_WARNING,"create inner message failed");  
+    }
+    
+    im->status = MSG_STAT_EMPTY;
+    im->data_len = 0;
+    im->data = NULL;
+    return im;
+}
+
+
+
+void * getInnerMessageData(Inner_message * im){
+    if (im == NULL) {
+        return NULL;
+    }
+    return im->data;
+}
+
+
+

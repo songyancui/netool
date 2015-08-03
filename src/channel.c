@@ -58,7 +58,7 @@ Channel *create_channel(){
 	return channel_ptr;		
 }
 
-int	send_msg_channel(int fd,Inner_msg * msg){
+int	send_msg_channel(int fd,Order_msg * msg){
 		if(fd < 0) {
 			ntLogging(LOG_WARNING,"%s","There is no fd to send");
 		}
@@ -71,16 +71,16 @@ int	send_msg_channel(int fd,Inner_msg * msg){
 		int write_len;
 		ntLogging(LOG_DEBUG,"%s %d","writing the msg",msg->command);
 		
-		write_len = write(fd, msg, sizeof(Inner_msg));
-		if(write_len != sizeof(Inner_msg)){  //TODO  care interupting  and block
+		write_len = write(fd, msg, sizeof(Order_msg));
+		if(write_len != sizeof(Order_msg)){  //TODO  care interupting  and block
 			ntLogging(LOG_WARNING,"%s write_len is  %d"," writing message failed  ",write_len);
 		}
 			ntLogging(LOG_DEBUG,"%s size: %d","send complete",write_len);
 	}
 
-int	receive_msg_channel(int fd,Inner_msg *msg){
-		Inner_msg *inner_msg_ptr ;
-		inner_msg_ptr = msg;	
+int	receive_msg_channel(int fd,Order_msg *msg){
+		Order_msg *order_msg_ptr ;
+		order_msg_ptr = msg;	
 		int receive_msg_len;
         
 		if(fd < 0){
@@ -88,13 +88,13 @@ int	receive_msg_channel(int fd,Inner_msg *msg){
 			return  -1;	
 		}
 
-		receive_msg_len = read(fd ,inner_msg_ptr, sizeof(Inner_msg));
+		receive_msg_len = read(fd ,order_msg_ptr, sizeof(Order_msg));
 			
 		if(receive_msg_len < 0){
 				ntLogging(LOG_DEBUG,"%s errno:%d ","receive err",errno);
 				return -1;
 		}
-		ntLogging(LOG_DEBUG,"%s %d %d","receive the mess",inner_msg_ptr->command,sizeof(Inner_msg));
+		ntLogging(LOG_DEBUG,"%s %d %d","receive the mess",order_msg_ptr->command,sizeof(Order_msg));
 		return 1;
 	}
 
@@ -109,23 +109,23 @@ int	close_channel(Channel * channel_ptr){
         channel_ptr = NULL;
 }
 
-Inner_msg * create_inner_msg(){
-   Inner_msg * inner_msg_p;
-   inner_msg_p = ntmalloc(sizeof(Inner_msg));    
+Order_msg * create_order_msg(){
+   Order_msg * order_msg_p;
+   order_msg_p = ntmalloc(sizeof(Order_msg));    
 
-   if (inner_msg_p == NULL) {
-        ntLogging(LOG_WARNING,"create inner msg failed" );     
+   if (order_msg_p == NULL) {
+        ntLogging(LOG_WARNING,"create order msg failed" );     
         return NULL;
    }
-   return inner_msg_p;
+   return order_msg_p;
 }
 
-void inner_msg_init(Inner_msg * inner_msg_p){
-    if (inner_msg_p == NULL) {
-        ntLogging(LOG_WARNING,"the inner message is empty");
+void order_msg_init(Order_msg * order_msg_p){
+    if (order_msg_p == NULL) {
+        ntLogging(LOG_WARNING,"the order message is empty");
     }
-    inner_msg_p->status = -1;
-    inner_msg_p->command = -1;
+    order_msg_p->status = -1;
+    order_msg_p->command = -1;
 }
 
 #ifdef TEST
@@ -139,23 +139,23 @@ int main(int argc, const char *argv[])
     channel_p = create_channel();
     ntassert_not_NULL(channel_p, "channel create");
    
-    Inner_msg * inner_msg_p ;
-    Inner_msg *receive_inner_msg_p;
-    inner_msg_p = create_inner_msg();
-    receive_inner_msg_p = create_inner_msg();
+    Order_msg * order_msg_p ;
+    Order_msg *receive_order_msg_p;
+    order_msg_p = create_order_msg();
+    receive_order_msg_p = create_order_msg();
 
-    ntassert_not_NULL(inner_msg_p, "inner msg create"); 
-    ntassert_not_NULL(receive_inner_msg_p, "inner msg create"); 
+    ntassert_not_NULL(order_msg_p, "order msg create"); 
+    ntassert_not_NULL(receive_order_msg_p, "order msg create"); 
 
-    inner_msg_init(inner_msg_p); 
-    inner_msg_init(receive_inner_msg_p); 
+    order_msg_init(order_msg_p); 
+    order_msg_init(receive_order_msg_p); 
 
-    inner_msg_p->status = 4;  //just for testing
-    inner_msg_p->command = 4; //just fors testing
+    order_msg_p->status = 4;  //just for testing
+    order_msg_p->command = 4; //just fors testing
 
     
-    send_msg_channel(channel_p->fd[0], inner_msg_p); 
-    receive_msg_channel(channel_p->fd[1], receive_inner_msg_p);
+    send_msg_channel(channel_p->fd[0], order_msg_p); 
+    receive_msg_channel(channel_p->fd[1], receive_order_msg_p);
     
     return 0;
 }
