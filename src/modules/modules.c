@@ -34,6 +34,7 @@
 #include "modules.h"
 #include "../log.h"
 #include "../dict.h"
+#include "echo_module.c"
 #define REGISTER_MODULE(module)\
 	dictAdd(modules, module.name, &module);	
 
@@ -43,8 +44,7 @@ dict * loadAllModule(){
 
 	sgLogging(LOG_DEBUG,"%s","load all modules");
 	
-	REGISTE_MODULE(echo);
-	REGISTE_MODULE(test);
+	REGISTE_MODULE(echo_module);
 
 	return modules;
 }

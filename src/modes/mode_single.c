@@ -56,6 +56,7 @@ void acceptCallback(EventLoop * eventLoop_p, int listen_fd, void * clientData, i
     
     client_fd = ntTcpAccept(listen_fd,NULL, NULL) ;
     if (client_fd != NET_ERR){
+        //HOOK_MODULE_ACCEPT(client_fd);
         client_mask |=IO_READABLE;
         if (EVENT_ERR == createIoEvent(eventLoop_p, client_fd, client_mask, readCallback, NULL)){
             ntLogging(LOG_WARNING,"create client fd IO_READABLE failed client_fd:%d",client_fd );  

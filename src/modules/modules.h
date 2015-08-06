@@ -28,10 +28,19 @@
 */
 
 
-
-
 #ifndef __MODULE_H
 #define __MODULE_H
+#include "../dict.h"
+#include "../event.h"
+#include "../client.h"
+
+#define MODULE_OK 0
+#define MODULE_ERR -1
+#define DATA_PARSE_SUCCESS 1
+
+#define STEP_FORWARD 1
+#define STEP_CYC 2
+#define STEP_OVER 3
 
 typedef void (*do_handler)(dict * result);
 
@@ -39,11 +48,14 @@ typedef void (*do_handler)(dict * result);
 typedef struct module{
 	char * module_name ;
 
-	void * (* _construct)(struct event_base *event);  //it will run when load module
-	int *  (*_destruct)(void *modlue);                //run when the module canceled
-	
-	void *(*_do)(void * module ,do_handler do_callback,void *ptr ); //callback it when received the message
-	void *(*_done)(void *module, void *handle) ; //callback it when complete the message
+	void * (* _construct)(EventLoop * eventLoop_p);  //it will run when load module
+	int *  (*_destruct)(EventLoop * eventLoop_p);                //run when the module canceled
+
+	int (*_accept)(void * module_context, Client *client_p); //callback it when received the message
+	int (*_do_read)(void * module_context, Client *client_p); //callback it when received the message
+	int (*_do)(void * module_context, Client *client_p); //callback it when received the message
+	int (*_do_write)(void * module_context, Client *client_p); //callback it when received the message
+	int (*_done)(void * module_context, Client *client_p); //callback it when received the message
 } Module;
 
 dict *loadAllModules();

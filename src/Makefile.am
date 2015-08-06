@@ -17,6 +17,8 @@ netool_SOURCES=main.c \
 		io.c\
         event.c\
         modes/mode.c\
+        modules/modules.c\
+        modules/echo_module.c\
 		third/cJSON/cJSON.c
 		
 

@@ -28,117 +28,89 @@
 */
 
 
-#include "module.h"
+#include "modules.h"
 #include "../dict.h"
 #include "../adlist.h"
+#include "../event.h"
 #include "../log.h"
+#include "../mm.h"
+#include "../client.h"
+#include "../io.h"
 
-
-typedef struct echo_event {
-	event_base *event_base_ptr;
-}Echo_event;
 
 typedef struct echo_message{
 	char  message[1024];
 	int message_len;
-	event * event;
-	evutil_socket_t client_fd;
-	timeval echo_timeout ;
-	int retry;   //TODO try the max retry count
-	Task *task;
-	event_base *event_base_ptr;	
 }Echo_message;
 
-
-echo_construct(event_base * event){
-	Echo_event *echo_event_ptr;
-	echo_event_ptr = malloc(sizeof(Echo_module));			
-	echo_even_ptr->event_base_ptr = event;
-	return echo_event_ptr;
-}
-
-int echo_destruct(void* module){
-	if(module!=NULL)
-		free(module);
-	module = NULL;
-	return 1;
-	
-}
+typedef struct echo_context {
+	EventLoop *eventLoop_p;
+    Echo_message *message;
+}Echo_context;
 
 
-void echo_do(void *module, Task *task){
-	Echo_event *echo_event_ptr = (Echo_event *)module;
-	struct timeval echo_timeout = {3,0};
-	Echo_message * echo_message_ptr = malloc(sizeof(Echo_message));
-	memset(echo_message_ptr, 0, sizeof(Echo_message));
-	
-	echo_message_ptr->client_fd = task->client_fd;
-	echo_message_ptr->task = task;
-	echo_message_ptr->retry = 3;   //TODO  take the value in the config file
-	echo_message_ptr->event_base = echo_event_ptr;
-	echo_message_ptr->event = event_new(echo_event_ptr->event_base_ptr,task->client_fd,EV_TIMEOUT|EV_READ|EV_PERSIST, echo_do_read_callback,echo_message_ptr);
-	event_add(echo_message_ptr->event,&echo_timeout);
+
+int echo_construct(EventLoop * eventLoop_p){
+	Echo_context *echo_context_p;
+    echo_context_p = ntmalloc(sizeof(Echo_context));
+    if (echo_context_p!=NULL){
+        echo_context_p->eventLoop_p = eventLoop_p;
+        return MODULE_OK; 
+    }
+    return MODULE_ERR; 
 }
 
 
-void echo_do_read_callback(evutil_socket_t client_fd, short what, void * echo_message_ptr){
-		sgLogging(LOG_DEBUG,"%s ",__FUNCTION__);
-		Echo_message echo_message_p =(Echo_message *) echo_message_ptr	;	
-		if(what&EV_TIMEOUT&&echo_message_ptr->retry>0){ 
-			echo_message_ptr->retry --;
-		}else{
-			event_del(echo_message_ptr->event); 
-			sgLogging(LOG_WARNING,"%s","echo message  is deleted for expiring");
-		}
-	
-		if(what&EV_READ){
-			echo_message_p = channel_receive(client_fd, echo_message_p);
-			sgLogging(LOG_DEBUG,"%s %s","recive the message",echo_message_p->message);
-			event_del(echo_message_ptr->event); 
-			echo_message_ptr->event = event_set(echo_event_ptr->event_base_ptr,task->client_fd,EV_TIMEOUT|EV_WRITE|EV_PERSIST, echo_do_write_callback,echo_message_ptr);
-			event_add(echo_message_ptr->event,&echo_timeout);
-				
-		}
+int echo_destruct(Echo_context *echo_context_p){
+	if(echo_context_p!=NULL){
+        if (echo_context_p->message != NULL){
+             ntfree(echo_context_p->message);
+        }
+		ntfree(echo_context_p);
+    }
+
+	return MODULE_OK;
 }
 
-void echo_do_write_callback(evutil_socket_t client_fd, short what, void * echo_message_ptr){
-	sgLogging(LOG_DEBUG,"%s",__FUNCTION__);
-	Echo_message echo_message_p = (Echo_message *) echo_message_ptr;
-	if(what&EV_TIMEOUT&&echo_message_ptr->retry>0){ 
-		echo_message_ptr->retry --;
-	}else{
-		event_del(echo_message_ptr->event); 
-		sgLogging(LOG_WARNING,"%s","echo message  is deleted for expiring");
-	}
-	if(what&EV_WRITE){
-		channel_push(client_fd, echo_message_p);
-		event_del(echo_message_p->event);
-			
-	}	
-	
+int echo_package_complete(Echo_context * echo_context_p){
+    return 1;
 }
 
-int echo_done(Task *task, Echo_message *echo_message_ptr){
-	if(echo_message_ptr !=NULL){
-		free(echo_message_ptr);
-		echo_message_ptr = NULL;
-	}
-	
-	if(task !=NULL){
-		free(task);
-		task = NULL;
-	}
-	return 1;	
+int echo_accept (Echo_context * echo_context_p, Client * client_p){
+    ntLogging(LOG_DEBUG,"accept client %d", client_p->fd);  
+    return STEP_FORWARD;
+}
+
+int echo_do_read(Echo_context *echo_context_p, Client *client_p){
+    if (DATA_PARSE_SUCCESS != echo_package_compplete(echo_context_p)) {
+         return STEP_CYC ;
+    }
+    return STEP_FORWARD;
+}
+
+
+int echo_do(Echo_context *echo_context_p, Client *client_p){
+    ntLogging(LOG_DEBUG,"echo_do");
+    return STEP_FORWARD;
+}
+
+int echo_do_write(Echo_context *echo_context_p, Client *client_p){
+    ntLogging(LOG_DEBUG,"echo_do_write");
+    return STEP_FORWARD;
+}
+
+int echo_done(Echo_context *echo_context_p){
+    ntLogging(LOG_DEBUG,"echo_done" );
+	return STEP_OVER;	
 }
 
 
 Module echo_module = { "echo",
-	event_base *event_base_ptr,
-	
 	echo_construct,
 	echo_destruct,
-	
+    echo_accept,
+	echo_do_read,
 	echo_do,
+	echo_do_write,
 	echo_done,
-
 };

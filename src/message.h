@@ -29,17 +29,30 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#define MESSAGE_OK 0
+#define MESSAGE_ERR -1
+
 typedef enum{
     MSG_STAT_EMPTY = 0,  
     MSG_STAT_PROCESSING,
 } msg_stat_t;
 
 typedef struct inner_message{
-    msg_stat_t status; // mark data status 
     int data_len;
     void * data; 
 }Inner_message ;
 
+typedef struct outer_message {
+    msg_stat_t status; // mark data status 
+    int data_len;
+    Outer_message_cb outer_message_callback;
+} Outer_message;
+
+typedef struct outer_message_cb{
+    void * (* _outer_msg_parser)(struct outer_message);     
+    void * (* _outer_msg_del)(struct outer_message);
+//    void * selfData;
+} Outer_message_cb;
 
 
 #endif /* end of include guard: MESSAGE_H */
