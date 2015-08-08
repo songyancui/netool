@@ -26,3 +26,23 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 */
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "client.h"
+#include "log.h"
+#include "mm.h"
+
+
+Client * createClient(int fd){
+    if (fd < 0) {
+        ntLogging(LOG_WARNING,"client fd is inavailabel");
+    }
+    Client * cp = ntmalloc(sizeof(Client)) ;
+    if (cp == NULL){
+        ntLogging(LOG_WARNING,"create Client failed" );
+        return NULL;
+    }
+    cp->fd = fd;
+    return cp;
+}

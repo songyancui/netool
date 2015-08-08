@@ -28,6 +28,7 @@ test_util()
 test_util "master" "master.c"; 
 test_util "channel" "channel.c"; 
 test_util "net" "net.c" ;
+test_util "adlist" "adlist.c"
 rm test.sock;
 
 test_util "event" "event.c" ;

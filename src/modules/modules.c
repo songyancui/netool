@@ -37,15 +37,214 @@
 #include "echo_module.c"
 
 #define REGISTE_MODULE(module)\
-	dictAdd(modules, module.module_name, &module)
+	listAddNodeTail(modules, &module)
 
 
-dict * loadAllModules(){
-	dict *modules = dictCreate(&dictTypeHeapStringCopyKey,NULL);
+void loadAllModules(){
+	//dict *modules = dictCreate(&dictTypeHeapStringCopyKey,NULL);
+    modules = listCreate();
 	ntLogging(LOG_DEBUG,"load all modules");
 	
 	REGISTE_MODULE(echo_module);
 
-	return modules;
 }
 
+int hook_modules_construct(EventLoop * eventLoop_p){
+    listNode * current;
+    Module * value = NULL;
+    int module_return;
+    ntLogging(LOG_DEBUG,"module construct");
+
+    listIter * modules_iter = listGetIterator(modules, AL_START_HEAD);
+    while(NULL != (current = listNext(modules_iter))) {
+        value = (Module *)current->value; 
+
+        step_cyc :
+        if (value != NULL && value->_construct != NULL){
+            module_return = value->_construct(value, eventLoop_p); 
+            if (module_return == STEP_FORWARD){
+                continue; 
+            } else if (module_return  == STEP_OVER){
+                return STEP_OVER; 
+            } else if (module_return == STEP_REWIND){
+                //TOCSY  be careful about cyc 
+                listRewind(modules, modules_iter); 
+                continue;
+            } else if (module_return = STEP_CYC){
+                goto step_cyc ;
+            }
+        }
+    }
+}
+
+int hook_modules_destruct(){
+    listNode * current;
+    Module * value = NULL;
+    int module_return;
+    ntLogging(LOG_DEBUG,"module destruct");
+
+    listIter * modules_iter = listGetIterator(modules, AL_START_HEAD);
+    while(NULL != (current = listNext(modules_iter))) {
+        value = (Module *)current->value; 
+
+        step_cyc :
+        if (value != NULL && value->_construct != NULL){
+            module_return = value->_destruct(value->module_context); 
+            if (module_return == STEP_FORWARD){
+                continue; 
+            } else if (module_return  == STEP_OVER){
+                return STEP_OVER; 
+            } else if (module_return == STEP_REWIND){
+                //TOCSY  be careful about cyc 
+                listRewind(modules, modules_iter); 
+                continue;
+            } else if (module_return = STEP_CYC){
+                goto step_cyc ;
+            }
+        }
+    }
+}
+
+
+int hook_modules_accept(Client * client_p){
+    listNode * current;
+    Module * value = NULL;
+    int module_return;
+    ntLogging(LOG_DEBUG,"module accept");
+
+    listIter * modules_iter = listGetIterator(modules, AL_START_HEAD);
+    while(NULL != (current = listNext(modules_iter))) {
+        value = (Module *)current->value; 
+
+        step_cyc :
+        if (value != NULL && value->_construct != NULL){
+            module_return = value->_accept(value->module_context, client_p); 
+            if (module_return == STEP_FORWARD){
+                continue; 
+            } else if (module_return  == STEP_OVER){
+                return STEP_OVER; 
+            } else if (module_return == STEP_REWIND){
+                //TOCSY  be careful about cyc 
+                listRewind(modules, modules_iter); 
+                continue;
+            } else if (module_return = STEP_CYC){
+                goto step_cyc ;
+            }
+        }
+    }
+}
+
+
+int hook_modules_do_read(Client * client_p){
+    listNode * current;
+    Module * value = NULL;
+    int module_return;
+    ntLogging(LOG_DEBUG,"module do_read");
+
+    listIter * modules_iter = listGetIterator(modules, AL_START_HEAD);
+    while(NULL != (current = listNext(modules_iter))) {
+        value = (Module *)current->value; 
+
+        step_cyc :
+        if (value != NULL && value->_construct != NULL){
+            module_return = value->_do_read(value->module_context, client_p); 
+            if (module_return == STEP_FORWARD){
+                continue; 
+            } else if (module_return  == STEP_OVER){
+                return STEP_OVER; 
+            } else if (module_return == STEP_REWIND){
+                //TOCSY  be careful about cyc 
+                listRewind(modules, modules_iter); 
+                continue;
+            } else if (module_return = STEP_CYC){
+                goto step_cyc ;
+            }
+        }
+    }
+}
+
+int hook_modules_do(Client * client_p){
+    listNode * current;
+    Module * value = NULL;
+    int module_return;
+    ntLogging(LOG_DEBUG,"module do");
+
+    listIter * modules_iter = listGetIterator(modules, AL_START_HEAD);
+    while(NULL != (current = listNext(modules_iter))) {
+        value = (Module *)current->value; 
+
+        step_cyc :
+        if (value != NULL && value->_construct != NULL){
+            module_return = value->_do(value->module_context, client_p); 
+            if (module_return == STEP_FORWARD){
+                continue; 
+            } else if (module_return  == STEP_OVER){
+                return STEP_OVER; 
+            } else if (module_return == STEP_REWIND){
+                //TOCSY  be careful about cyc 
+                listRewind(modules, modules_iter); 
+                continue;
+            } else if (module_return = STEP_CYC){
+                goto step_cyc ;
+            }
+        }
+    }
+}
+
+
+int hook_modules_do_write(Client * client_p){
+    listNode * current;
+    Module * value = NULL;
+    int module_return;
+    ntLogging(LOG_DEBUG,"module do write");
+
+    listIter * modules_iter = listGetIterator(modules, AL_START_HEAD);
+    while(NULL != (current = listNext(modules_iter))) {
+        value = (Module *)current->value; 
+
+        step_cyc :
+        if (value != NULL && value->_construct != NULL){
+            module_return = value->_do_write(value->module_context, client_p); 
+            if (module_return == STEP_FORWARD){
+                continue; 
+            } else if (module_return  == STEP_OVER){
+                return STEP_OVER; 
+            } else if (module_return == STEP_REWIND){
+                //TOCSY  be careful about cyc 
+                listRewind(modules, modules_iter); 
+                continue;
+            } else if (module_return = STEP_CYC){
+                goto step_cyc ;
+            }
+        }
+    }
+}
+
+
+int hook_modules_done(Client * client_p){
+    listNode * current;
+    Module * value = NULL;
+    int module_return;
+    ntLogging(LOG_DEBUG,"module done");
+
+    listIter * modules_iter = listGetIterator(modules, AL_START_HEAD);
+    while(NULL != (current = listNext(modules_iter))) {
+        value = (Module *)current->value; 
+
+        step_cyc :
+        if (value != NULL && value->_construct != NULL){
+            module_return = value->_done(value->module_context, client_p); 
+            if (module_return == STEP_FORWARD){
+                continue; 
+            } else if (module_return  == STEP_OVER){
+                return STEP_OVER; 
+            } else if (module_return == STEP_REWIND){
+                //TOCSY  be careful about cyc 
+                listRewind(modules, modules_iter); 
+                continue;
+            } else if (module_return = STEP_CYC){
+                goto step_cyc ;
+            }
+        }
+    }
+}

@@ -50,25 +50,28 @@ typedef struct echo_context {
 }Echo_context;
 
 
-
-int echo_construct(EventLoop * eventLoop_p){
+int echo_construct(Module * module_p, EventLoop * eventLoop_p){
+    ntLogging(LOG_DEBUG,"echo module construct ");
 	Echo_context *echo_context_p;
     echo_context_p = ntmalloc(sizeof(Echo_context));
+    module_p->module_context = echo_context_p;
+
     if (echo_context_p!=NULL){
         echo_context_p->eventLoop_p = eventLoop_p;
         echo_context_p->message = NULL;
-        return MODULE_OK; 
+        return STEP_FORWARD; 
     }
-    return MODULE_ERR; 
+    return STEP_FORWARD; 
 }
 
 
 int echo_destruct(void  * echo_context_p){
+    ntLogging(LOG_DEBUG,"echo module destruct ");
 	if(echo_context_p!=NULL){
 		ntfree(echo_context_p);
     }
 
-	return MODULE_OK;
+	return STEP_FORWARD;
 }
 
 int echo_package_complete(void * echo_context_p){
@@ -112,4 +115,5 @@ Module echo_module = { "echo",
 	echo_do,
 	echo_do_write,
 	echo_done,
+    NULL,
 };

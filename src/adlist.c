@@ -337,3 +337,32 @@ void listRotate(list *list) {
     tail->next = list->head;
     list->head = tail;
 }
+
+#ifdef TEST 
+#include "log.h"
+
+int main(int argc, const char *argv[])
+{
+    ntLogInit(LOG_DEBUG, NULL);
+    list * lp;
+    lp = listCreate();
+
+    listAddNodeHead(lp, (void *)1);
+    listAddNodeHead(lp, (void *)11);
+    listAddNodeHead(lp, (void *)111);
+
+    listIter * lip = listGetIterator(lp, AL_START_HEAD);
+    listNode * current;
+    void * value;
+    while((current = listNext(lip)) != NULL) {
+       value = current->value;  
+       ntLogging(LOG_DEBUG,"value : %d", value);
+    }
+
+    listReleaseIterator(lip);  
+    listRelease(lp);
+
+    return 0;
+}
+
+#endif

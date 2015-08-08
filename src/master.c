@@ -81,7 +81,7 @@ int	runMaster(Master * m){
 
 int main(int argc, const char *argv[])
 {
-    Master * master_p = master_create();
+    Master * master_p = createMaster();
     ntassert_not_NULL(master_p, "master_create");
 
 

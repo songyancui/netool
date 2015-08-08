@@ -31,8 +31,8 @@
 
 typedef struct client{
     int fd;
-    
 } Client;
 
+Client * createClient(int fd);
 
 #endif /* end of include guard: CLIENT_H */

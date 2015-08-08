@@ -94,8 +94,9 @@ PROGRAMS = $(bin_PROGRAMS)
 am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) test.$(OBJEXT) \
 	mm.$(OBJEXT) adlist.$(OBJEXT) dict.$(OBJEXT) \
 	ntconfig.$(OBJEXT) master.$(OBJEXT) worker.$(OBJEXT) \
-	channel.$(OBJEXT) net.$(OBJEXT) io.$(OBJEXT) event.$(OBJEXT) \
-	mode.$(OBJEXT) modules.$(OBJEXT) cJSON.$(OBJEXT)
+	client.$(OBJEXT) channel.$(OBJEXT) net.$(OBJEXT) io.$(OBJEXT) \
+	event.$(OBJEXT) mode.$(OBJEXT) modules.$(OBJEXT) \
+	cJSON.$(OBJEXT)
 netool_OBJECTS = $(am_netool_OBJECTS)
 netool_DEPENDENCIES =
 am_test_OBJECTS = test_main.$(OBJEXT)
@@ -254,6 +255,7 @@ netool_SOURCES = main.c \
 		ntconfig.c\
 		master.c\
         worker.c\
+        client.c\
 		channel.c\
 		net.c\
 		io.c\
@@ -357,6 +359,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/adlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cJSON.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dict.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io.Po@am__quote@

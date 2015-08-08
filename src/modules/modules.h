@@ -31,6 +31,7 @@
 #ifndef __MODULE_H
 #define __MODULE_H
 #include "../dict.h"
+#include "../adlist.h"
 #include "../event.h"
 #include "../client.h"
 
@@ -39,34 +40,36 @@
 #define DATA_PARSE_SUCCESS 1
 
 #define STEP_FORWARD 1
-#define STEP_CYC 2
-#define STEP_OVER 3
+#define STEP_REWIND 2
+#define STEP_CYC 3
+#define STEP_OVER 4 
 
 
-#define HOOK_MODULES_CONSTRUCT 
-#define HOOK_MODULES_DESTRUCT 
-#define HOOK_MODULES_ACCEPT
-#define HOOK_MODULES_READING
-#define HOOK_MODULES_PROCESS
-#define HOOK_MODULES_WRITING
-#define HOOK_MODULES_DONE
+#define HOOK_MODULES_CONSTRUCT(eventLoop_p) hook_modules_construct(eventLoop_p)
+#define HOOK_MODULES_DESTRUCT  hook_modules_destruct()
+#define HOOK_MODULES_ACCEPT(client_p) hook_modules_accept(client_p)
+#define HOOK_MODULES_READING(client_p) hook_modules_do_read(client_p)
+#define HOOK_MODULES_PROCESSING(client_p) hook_modules_do(client_p)
+#define HOOK_MODULES_WRITING(client_p) hook_modules_do_write(client_p)
+#define HOOK_MODULES_DONE(client_p) hook_modules_done(client_p)
 
 typedef void (*do_handler)(dict * result);
-
+list * modules;
 
 typedef struct module{
 	char * module_name ;
 
-	int  (* _construct)(EventLoop * eventLoop_p);  //it will run when load module
+	int  (* _construct)(struct module * module_p , EventLoop * eventLoop_p);  //it will run when load module
 	int  (*_destruct)(void * module_context);                //run when the module canceled
 
-	int (*_accept)(void * module_context, Client *client_p); //callback it when received the message
-	int (*_do_read)(void * module_context, Client *client_p); //callback it when received the message
-	int (*_do)(void * module_context, Client *client_p); //callback it when received the message
-	int (*_do_write)(void * module_context, Client *client_p); //callback it when received the message
-	int (*_done)(void * module_context, Client *client_p); //callback it when received the message
+	int (*_accept)(void * module_context, Client *client_p); //callback it when accept client 
+	int (*_do_read)(void * module_context, Client *client_p); //callback it when reading the message ,not complete
+	int (*_do)(void * module_context, Client *client_p); //callback it when received the message completely
+	int (*_do_write)(void * module_context, Client *client_p); //callback it when writing the message
+	int (*_done)(void * module_context, Client *client_p); //callback it after writing complete 
+    void * module_context;  //module context
 } Module;
 
-dict *loadAllModules();
+void loadAllModules();
 
 #endif 

@@ -12,6 +12,7 @@ netool_SOURCES=main.c \
 		ntconfig.c\
 		master.c\
         worker.c\
+        client.c\
 		channel.c\
 		net.c\
 		io.c\

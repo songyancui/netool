@@ -21,10 +21,9 @@ int main(int argc, char ** argv){
     ntLogging(LOG_DEBUG, " worker_count: %d", g_server_config.worker_count);
     ntLogging(LOG_DEBUG, " master_count: %d", g_server_config.master_count);
     ntLogging(LOG_DEBUG, " mode: %s", g_server_config.mode);
-    Modules = loadAllModules();
+    loadAllModules();
 
     /** mode  start**/
-    
     mode_p = createMode();
     ntLogging(LOG_DEBUG,"crete mode successful");
     initMode(mode_p);

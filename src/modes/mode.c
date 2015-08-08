@@ -82,9 +82,11 @@ int delMode(Mode *mode_p){
         ntfree(mode_p);
         return MODE_OK; 
     }
+
     if (mode_p->_mode_end == NULL){
         ntfree(mode_p);
         return MODE_OK;
     }
+    HOOK_MODULES_DESTRUCT;
     return MODE_ERR;
 }

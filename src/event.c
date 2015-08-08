@@ -406,6 +406,8 @@ void writeCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, in
 
 void readCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
     int recv_totlen;
+    char recv_str[20];
+
     recv_totlen = ntreadEasyByCount(fd,recv_str, 15 );
     mask |= IO_WRITABLE;
     createIoEvent(eventLoop_p, fd, mask, writeCallback, NULL);

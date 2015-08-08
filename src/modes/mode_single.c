@@ -27,38 +27,53 @@
 */
 #include "../master.h"
 #include "../worker.h"
+#include "../modules/modules.h"
 #include "../event.h"
 #include "../net.h"
 #include "../ntconfig.h"
+#include "../client.h"
 
 #include "mode.h"
 
 void writeCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
     ntLogging(LOG_DEBUG,"in write callback" );
+    Client * cp = (Client *)clientData;
+
+    HOOK_MODULES_WRITING(cp);
     ntwriteEasyByCount(fd,"OK", 2);
+
     mask |= IO_READABLE|IO_WRITABLE;
     delIoEvent(eventLoop_p, fd, mask);
+    HOOK_MODULES_DONE(cp);
 }
 
 void readCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
     char * send_msg = "master_send_msg";
     char recv_str[15];
     int recv_totlen;
+    Client * cp = (Client *)clientData;
+
     recv_totlen = ntreadEasyByCount(fd,recv_str, 15 );
+    HOOK_MODULES_READING(cp);
+    HOOK_MODULES_PROCESSING(cp);
+
     mask |= IO_WRITABLE;
-    createIoEvent(eventLoop_p, fd, mask, writeCallback, NULL);
+    createIoEvent(eventLoop_p, fd, mask, writeCallback, cp);
 }
 
 void acceptCallback(EventLoop * eventLoop_p, int listen_fd, void * clientData, int mask){
     ntLogging(LOG_DEBUG,"accept callback");
     int client_fd = 0;
     int client_mask = 0;
+    Client *cp;
     
     client_fd = ntTcpAccept(listen_fd,NULL, NULL) ;
+
     if (client_fd != NET_ERR){
-        //HOOK_MODULE_ACCEPT(client_fd);
+        cp = createClient(client_fd); 
+        HOOK_MODULES_ACCEPT(cp);
         client_mask |=IO_READABLE;
-        if (EVENT_ERR == createIoEvent(eventLoop_p, client_fd, client_mask, readCallback, NULL)){
+        if (EVENT_ERR == createIoEvent(eventLoop_p, client_fd, client_mask, readCallback,cp)){
             ntLogging(LOG_WARNING,"create client fd IO_READABLE failed client_fd:%d",client_fd );  
         }
     }
@@ -66,6 +81,7 @@ void acceptCallback(EventLoop * eventLoop_p, int listen_fd, void * clientData, i
 
 Worker * createSingleWorker(){
     Worker * wp = NULL;
+     
     wp = createWorker(1, NULL);
     if (wp == NULL){
         ntLogging(LOG_FATAL,"createSingleWorker failed");
@@ -79,6 +95,9 @@ void * single_mode_init(Mode * mode_p){
 
     Worker * wp = NULL;
     wp = createSingleWorker();
+    loadAllModules();
+    HOOK_MODULES_CONSTRUCT(wp->eventLoop_p);
+
     mode_p->mode_data = (Worker *)wp;
     mode_p->mode_data_del = delWorker; 
     return MODE_OK;
