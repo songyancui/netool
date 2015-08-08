@@ -30,6 +30,8 @@
 #ifndef EVENT_H
 
 #define EVENT_H
+#include <sys/time.h>
+#include <sys/types.h>
 
 #define EVENT_OK 0
 #define EVENT_ERR -1 

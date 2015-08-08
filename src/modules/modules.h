@@ -42,14 +42,23 @@
 #define STEP_CYC 2
 #define STEP_OVER 3
 
+
+#define HOOK_MODULES_CONSTRUCT 
+#define HOOK_MODULES_DESTRUCT 
+#define HOOK_MODULES_ACCEPT
+#define HOOK_MODULES_READING
+#define HOOK_MODULES_PROCESS
+#define HOOK_MODULES_WRITING
+#define HOOK_MODULES_DONE
+
 typedef void (*do_handler)(dict * result);
 
 
 typedef struct module{
 	char * module_name ;
 
-	void * (* _construct)(EventLoop * eventLoop_p);  //it will run when load module
-	int *  (*_destruct)(EventLoop * eventLoop_p);                //run when the module canceled
+	int  (* _construct)(EventLoop * eventLoop_p);  //it will run when load module
+	int  (*_destruct)(void * module_context);                //run when the module canceled
 
 	int (*_accept)(void * module_context, Client *client_p); //callback it when received the message
 	int (*_do_read)(void * module_context, Client *client_p); //callback it when received the message

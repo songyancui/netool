@@ -95,8 +95,7 @@ am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) test.$(OBJEXT) \
 	mm.$(OBJEXT) adlist.$(OBJEXT) dict.$(OBJEXT) \
 	ntconfig.$(OBJEXT) master.$(OBJEXT) worker.$(OBJEXT) \
 	channel.$(OBJEXT) net.$(OBJEXT) io.$(OBJEXT) event.$(OBJEXT) \
-	mode.$(OBJEXT) modules.$(OBJEXT) echo_module.$(OBJEXT) \
-	cJSON.$(OBJEXT)
+	mode.$(OBJEXT) modules.$(OBJEXT) cJSON.$(OBJEXT)
 netool_OBJECTS = $(am_netool_OBJECTS)
 netool_DEPENDENCIES =
 am_test_OBJECTS = test_main.$(OBJEXT)
@@ -261,7 +260,6 @@ netool_SOURCES = main.c \
         event.c\
         modes/mode.c\
         modules/modules.c\
-        modules/echo_module.c\
 		third/cJSON/cJSON.c
 
 test_SOURCES = test_main.c 
@@ -360,7 +358,6 @@ include ./$(DEPDIR)/adlist.Po
 include ./$(DEPDIR)/cJSON.Po
 include ./$(DEPDIR)/channel.Po
 include ./$(DEPDIR)/dict.Po
-include ./$(DEPDIR)/echo_module.Po
 include ./$(DEPDIR)/event.Po
 include ./$(DEPDIR)/io.Po
 include ./$(DEPDIR)/log.Po
@@ -416,20 +413,6 @@ modules.obj: modules/modules.c
 #	$(AM_V_CC)source='modules/modules.c' object='modules.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o modules.obj `if test -f 'modules/modules.c'; then $(CYGPATH_W) 'modules/modules.c'; else $(CYGPATH_W) '$(srcdir)/modules/modules.c'; fi`
-
-echo_module.o: modules/echo_module.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT echo_module.o -MD -MP -MF $(DEPDIR)/echo_module.Tpo -c -o echo_module.o `test -f 'modules/echo_module.c' || echo '$(srcdir)/'`modules/echo_module.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/echo_module.Tpo $(DEPDIR)/echo_module.Po
-#	$(AM_V_CC)source='modules/echo_module.c' object='echo_module.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o echo_module.o `test -f 'modules/echo_module.c' || echo '$(srcdir)/'`modules/echo_module.c
-
-echo_module.obj: modules/echo_module.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT echo_module.obj -MD -MP -MF $(DEPDIR)/echo_module.Tpo -c -o echo_module.obj `if test -f 'modules/echo_module.c'; then $(CYGPATH_W) 'modules/echo_module.c'; else $(CYGPATH_W) '$(srcdir)/modules/echo_module.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/echo_module.Tpo $(DEPDIR)/echo_module.Po
-#	$(AM_V_CC)source='modules/echo_module.c' object='echo_module.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o echo_module.obj `if test -f 'modules/echo_module.c'; then $(CYGPATH_W) 'modules/echo_module.c'; else $(CYGPATH_W) '$(srcdir)/modules/echo_module.c'; fi`
 
 cJSON.o: third/cJSON/cJSON.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cJSON.o -MD -MP -MF $(DEPDIR)/cJSON.Tpo -c -o cJSON.o `test -f 'third/cJSON/cJSON.c' || echo '$(srcdir)/'`third/cJSON/cJSON.c

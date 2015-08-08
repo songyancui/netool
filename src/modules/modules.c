@@ -35,16 +35,17 @@
 #include "../log.h"
 #include "../dict.h"
 #include "echo_module.c"
-#define REGISTER_MODULE(module)\
-	dictAdd(modules, module.name, &module);	
+
+#define REGISTE_MODULE(module)\
+	dictAdd(modules, module.module_name, &module)
 
 
-dict * loadAllModule(){
+dict * loadAllModules(){
 	dict *modules = dictCreate(&dictTypeHeapStringCopyKey,NULL);
-
-	sgLogging(LOG_DEBUG,"%s","load all modules");
+	ntLogging(LOG_DEBUG,"load all modules");
 	
 	REGISTE_MODULE(echo_module);
 
 	return modules;
 }
+

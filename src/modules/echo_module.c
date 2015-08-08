@@ -28,6 +28,8 @@
 */
 
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "modules.h"
 #include "../dict.h"
 #include "../adlist.h"
@@ -36,7 +38,6 @@
 #include "../mm.h"
 #include "../client.h"
 #include "../io.h"
-
 
 typedef struct echo_message{
 	char  message[1024];
@@ -55,51 +56,49 @@ int echo_construct(EventLoop * eventLoop_p){
     echo_context_p = ntmalloc(sizeof(Echo_context));
     if (echo_context_p!=NULL){
         echo_context_p->eventLoop_p = eventLoop_p;
+        echo_context_p->message = NULL;
         return MODULE_OK; 
     }
     return MODULE_ERR; 
 }
 
 
-int echo_destruct(Echo_context *echo_context_p){
+int echo_destruct(void  * echo_context_p){
 	if(echo_context_p!=NULL){
-        if (echo_context_p->message != NULL){
-             ntfree(echo_context_p->message);
-        }
 		ntfree(echo_context_p);
     }
 
 	return MODULE_OK;
 }
 
-int echo_package_complete(Echo_context * echo_context_p){
+int echo_package_complete(void * echo_context_p){
     return 1;
 }
 
-int echo_accept (Echo_context * echo_context_p, Client * client_p){
+int echo_accept (void * echo_context_p, Client * client_p){
     ntLogging(LOG_DEBUG,"accept client %d", client_p->fd);  
     return STEP_FORWARD;
 }
 
-int echo_do_read(Echo_context *echo_context_p, Client *client_p){
-    if (DATA_PARSE_SUCCESS != echo_package_compplete(echo_context_p)) {
+int echo_do_read(void  *echo_context_p, Client *client_p){
+    if (DATA_PARSE_SUCCESS != echo_package_complete(echo_context_p)) {
          return STEP_CYC ;
     }
     return STEP_FORWARD;
 }
 
 
-int echo_do(Echo_context *echo_context_p, Client *client_p){
+int echo_do(void  *echo_context_p, Client *client_p){
     ntLogging(LOG_DEBUG,"echo_do");
     return STEP_FORWARD;
 }
 
-int echo_do_write(Echo_context *echo_context_p, Client *client_p){
+int echo_do_write(void *echo_context_p, Client *client_p){
     ntLogging(LOG_DEBUG,"echo_do_write");
     return STEP_FORWARD;
 }
 
-int echo_done(Echo_context *echo_context_p){
+int echo_done(void  *echo_context_p, Client *client_p){
     ntLogging(LOG_DEBUG,"echo_done" );
 	return STEP_OVER;	
 }
