@@ -38,14 +38,18 @@
  #include "log.h"
 
 
-int ntread(int fd, void * ptr){
+int ntread(int fd, void * ptr, int length){
 	int  n;
 	struct iovec iov[1];
 	struct msghdr msg;
 	
 	iov[0].iov_base = ptr;
-	iov[0].iov_len = MAX_RECV_LENGTH;
-	
+    if (length > 0) {
+	    iov[0].iov_len = length;
+    }else{
+	    iov[0].iov_len = MAX_RECV_LENGTH;
+    }	
+
 	msg.msg_control = NULL;
 	msg.msg_controllen = 0;
 	msg.msg_name = NULL;
@@ -65,13 +69,17 @@ int ntread(int fd, void * ptr){
 }
 
 
-int ntwrite(int fd ,void * ptr){
+int ntwrite(int fd ,void * ptr, int length){
 	ssize_t n;
 	struct iovec iov[1];
 	struct msghdr msg;
 	
 	iov[0].iov_base = ptr;
-	iov[0].iov_len = sizeof(*ptr);
+    if (length > 0){
+	    iov[0].iov_len = length;
+    }else {
+	    iov[0].iov_len = sizeof(*ptr);
+    }
     	
 	msg.msg_control = NULL;
 	msg.msg_controllen = 0;
@@ -88,7 +96,7 @@ int ntwrite(int fd ,void * ptr){
 	}else{
 		ntLogging(LOG_DEBUG,"%s %d messages","sendmsg", n);
 	}
-	return 0;
+	return n;
 }
 
 int ntreadEasyByCount(int fd, char * buf, int count){

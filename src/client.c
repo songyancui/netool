@@ -28,6 +28,8 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "client.h"
 #include "log.h"
@@ -44,5 +46,124 @@ Client * createClient(int fd){
         return NULL;
     }
     cp->fd = fd;
+    cp->recv_msg_len = 0;
+    cp->recv_msg = NULL;
+
+    cp->send_msg_len = 0;
+    cp->send_msg = NULL;
+    cp->have_sent_msg_len = 0;
+
     return cp;
 }
+void  delClient(Client * client_p){
+    if (client_p == NULL){
+        ntLogging(LOG_WARNING,"client is empty" );
+        return ;    
+    }
+    if (client_p->fd > 0){
+        close(client_p->fd);
+    }
+    if (client_p->recv_msg != NULL){
+       ntfree(client_p->recv_msg); 
+       client_p->recv_msg = NULL;
+    }
+    
+    if (client_p->send_msg != NULL){
+       ntfree(client_p->send_msg); 
+       client_p->send_msg = NULL;
+    }
+
+    ntfree(client_p);
+    client_p = NULL;
+}
+
+int  clientReadData(Client * client_p){
+    int recv_len = -2;
+    int toread_len = 0;
+    if (client_p == NULL) {
+        ntLogging(LOG_WARNING,"client is empty");
+        return 0;
+    }
+    if (client_p->recv_msg == NULL) {
+        client_p->recv_msg = ntmalloc(RECV_MAX_LENGTH);
+        if (client_p->recv_msg == NULL){
+            ntLogging(LOG_WARNING,"malloc recv msg max length failed" );
+            return 0;
+        }
+        recv_len = ntread(client_p->fd, client_p->recv_msg, RECV_MAX_LENGTH);
+        if (recv_len == -1){
+            if (errno == EAGAIN){
+                return -EAGAIN;
+            }else{
+                ntLogging(LOG_WARNING,"error occoured error:%s", strerror(errno));
+                return -errno;
+            }
+        } else if (recv_len == 0 ){
+             ntLogging(LOG_WARNING,"client close socket, so delete  client");
+             delClient(client_p);
+        }
+        client_p->recv_msg_len = recv_len;
+    } else {
+        //saved old DATA
+        toread_len = RECV_MAX_LENGTH - client_p->recv_msg_len;
+        recv_len = ntread(client_p->fd, client_p->recv_msg+client_p->recv_msg_len , toread_len);
+        if (recv_len == -1){
+            if (errno == EAGAIN){
+                return -EAGAIN;
+            }else{
+                ntLogging(LOG_WARNING,"error occoured error:%s", strerror(errno));
+                return -errno;
+            }
+        } else if (recv_len ==0 ){
+             ntLogging(LOG_WARNING,"client close socket");
+        }
+        client_p->recv_msg_len += recv_len;     
+
+        if (client_p->recv_msg_len >= RECV_MAX_LENGTH){
+            ntLogging(LOG_WARNING,"the recv_msg is full, so delete client");
+            delClient(client_p);
+        }
+    }   
+    return recv_len; 
+}
+
+int clientWriteData(Client * client_p){
+    int send_len= -2;
+    if (client_p == NULL) {
+        ntLogging(LOG_WARNING, "client is empty");
+        return 0;
+    }    
+
+    if (client_p->send_msg == NULL) {
+       return 0; 
+    }
+
+    send_len = ntwrite(client_p->fd, client_p->send_msg + client_p->have_sent_msg_len, client_p->send_msg_len);
+
+    if (send_len == -1){
+        if (errno == EAGAIN) {
+            return -EAGAIN;
+        }else{
+            ntLogging(LOG_WARNING,"error occoured error:%s", strerror(errno));
+            return -errno;
+        }
+    }
+    client_p->send_msg_len -= send_len;
+    client_p->have_sent_msg_len += send_len;
+    if (client_p->send_msg_len >0){
+          ntLogging(LOG_WARNING,"writing message not complete, sent: %d, left:%d",send_len, client_p->send_msg_len);
+    }
+    return send_len; 
+}
+
+
+
+#ifdef TEST
+int main(int argc, const char *argv[])
+
+{
+    
+    return 0;
+}
+
+#endif

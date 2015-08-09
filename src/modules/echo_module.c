@@ -74,8 +74,14 @@ int echo_destruct(void  * echo_context_p){
 	return STEP_FORWARD;
 }
 
-int echo_package_complete(void * echo_context_p){
-    return 1;
+int echo_package_complete(Client *client_p){
+    if (client_p->recv_msg_len > 0 && client_p->recv_msg !=NULL){
+        ntLogging(LOG_DEBUG,"data :%s", client_p->recv_msg);
+        if (client_p->recv_msg[client_p->recv_msg_len-1] == '\n') {
+            return 1; 
+        } 
+    }
+    return -1;
 }
 
 int echo_accept (void * echo_context_p, Client * client_p){
@@ -84,7 +90,8 @@ int echo_accept (void * echo_context_p, Client * client_p){
 }
 
 int echo_do_read(void  *echo_context_p, Client *client_p){
-    if (DATA_PARSE_SUCCESS != echo_package_complete(echo_context_p)) {
+    if (DATA_PARSE_SUCCESS != echo_package_complete(client_p)) {
+        ntLogging(LOG_DEBUG,"reading data did not completed" );
          return STEP_CYC ;
     }
     return STEP_FORWARD;
@@ -93,6 +100,14 @@ int echo_do_read(void  *echo_context_p, Client *client_p){
 
 int echo_do(void  *echo_context_p, Client *client_p){
     ntLogging(LOG_DEBUG,"echo_do");
+    
+    client_p->send_msg = ntmalloc(client_p->recv_msg_len);
+    if (client_p->send_msg == NULL){
+        return STEP_CYC;
+    }
+    client_p->send_msg_len = client_p->recv_msg_len;
+    ntmemcpy(client_p->send_msg, client_p->recv_msg, client_p->recv_msg_len);
+
     return STEP_FORWARD;
 }
 

@@ -28,11 +28,20 @@
 */
 #ifndef CLIENT_H
 #define CLIENT_H
+#define RECV_MAX_LENGTH 4096
 
 typedef struct client{
     int fd;
+    int recv_msg_len;
+    char * recv_msg;
+    int send_msg_len;
+    char * send_msg;
+    int have_sent_msg_len;
 } Client;
 
 Client * createClient(int fd);
+void  delClient(Client * client_p);
+int clientWriteData(Client * client_p);
+int  clientReadData(Client * client_p);
 
 #endif /* end of include guard: CLIENT_H */

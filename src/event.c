@@ -128,6 +128,7 @@ int createIoEvent(EventLoop * eventLoop_p, int fd, int mask,eventCallback *callb
     IoEvent *io_event;
     io_event = &eventLoop_p->events[fd];
     if(apiAddEvent(eventLoop_p, fd, mask) == -1){
+        ntLogging(LOG_WARNING,"api add Event failed fd:%d", fd);
         return EVENT_ERR; 
     }
     io_event->mask |=mask;

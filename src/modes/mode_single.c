@@ -33,18 +33,20 @@
 #include "../ntconfig.h"
 #include "../client.h"
 
-#include "mode.h"
-
+#include "mode.h" 
 void writeCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
     ntLogging(LOG_DEBUG,"in write callback" );
     Client * cp = (Client *)clientData;
 
+    
     HOOK_MODULES_WRITING(cp);
-    ntwriteEasyByCount(fd,"OK", 2);
+    clientWriteData(cp);
+//    ntwriteEasyByCount(fd,"OK", 2);
 
     mask |= IO_READABLE|IO_WRITABLE;
     delIoEvent(eventLoop_p, fd, mask);
     HOOK_MODULES_DONE(cp);
+    delClient(cp);
 }
 
 void readCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int mask){
@@ -53,8 +55,10 @@ void readCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int
     int recv_totlen;
     Client * cp = (Client *)clientData;
 
-    recv_totlen = ntreadEasyByCount(fd,recv_str, 15 );
+    recv_totlen = clientReadData(cp);
+    //ntreadEasyByCount(fd,send_msg, 15);
     HOOK_MODULES_READING(cp);
+
     HOOK_MODULES_PROCESSING(cp);
 
     mask |= IO_WRITABLE;
@@ -68,6 +72,7 @@ void acceptCallback(EventLoop * eventLoop_p, int listen_fd, void * clientData, i
     Client *cp;
     
     client_fd = ntTcpAccept(listen_fd,NULL, NULL) ;
+    ntLogging(LOG_DEBUG,"tcpaccetp client fd",client_fd );
 
     if (client_fd != NET_ERR){
         cp = createClient(client_fd); 

@@ -37,9 +37,9 @@
 #define EVENT_ERR -1 
 
 
-#define IO_NONE 1
-#define IO_READABLE 2
-#define IO_WRITABLE 3
+#define IO_NONE 0
+#define IO_READABLE 1
+#define IO_WRITABLE 2
 
 #define EVENT_IO_EVENTS 1
 #define EVENT_TIME_EVENTS 2

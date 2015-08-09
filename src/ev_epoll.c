@@ -81,7 +81,7 @@ int apiAddEvent(EventLoop * eventLoop_p, int fd, int mask){
     ApiContext * ac = eventLoop_p->apidata; 
     struct epoll_event ee;
 
-    int op = eventLoop_p->events[fd].mask == IO_NONE? EPOLL_CTL_ADD:EPOLL_CTL_MOD;
+    int op = ((eventLoop_p->events[fd].mask == IO_NONE)? EPOLL_CTL_ADD:EPOLL_CTL_MOD);
 
     ee.events = 0;
 
@@ -101,7 +101,8 @@ void apiDelEvent(EventLoop *eventLoop_p, int fd, int delmask){
     ApiContext * ac = eventLoop_p->apidata;
 
     struct epoll_event ee;
-    int op = (eventLoop_p->events[fd].mask & (~delmask)) == IO_NONE ? EPOLL_CTL_DEL : EPOLL_CTL_MOD;
+    int op;
+    op = (eventLoop_p->events[fd].mask & (~delmask)) == IO_NONE ? EPOLL_CTL_DEL : EPOLL_CTL_MOD;
 
     ee.events = 0;
 

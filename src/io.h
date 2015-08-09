@@ -32,8 +32,8 @@
 
 #include "io.h"
 #define  MAX_RECV_LENGTH  4096 
-int ntread(int, void *);
-int ntwrite(int, void *);
+int ntread(int, void *, int);
+int ntwrite(int, void *, int);
 int ntreadEasyByCount(int , char *, int); 
 int ntwriteEasyByCount(int , char *, int); 
 

@@ -70,7 +70,7 @@ void * parseOuterMessage(Outer_message * om){
         return MESSAGE_ERR;
     }
     void * return_data;
-    return_data = om->_outer_msg_parser(om)
+    return_data = om->_outer_msg_parser(om);
     return return_data; 
 }
 
