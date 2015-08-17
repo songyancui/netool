@@ -29,14 +29,19 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 #define RECV_MAX_LENGTH 4096
+#define MAX_CLIENT_RECV_MSG_TIMES 3
 
 typedef struct client{
     int fd;
-    int recv_msg_len;
+
+    int recv_msg_len; // reading message length 
     char * recv_msg;
+    int recv_msg_times ; // try to read msg times, if bigger than  MAX_CLIENT_RECV_MSG_TIMES ,the message will be failed
+
     int send_msg_len;
     char * send_msg;
     int have_sent_msg_len;
+
 } Client;
 
 Client * createClient(int fd);

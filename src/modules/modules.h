@@ -37,13 +37,20 @@
 
 #define MODULE_OK 0
 #define MODULE_ERR -1
-#define DATA_PARSE_SUCCESS 1
 
+//parse message package and check completation
+#define DATA_PARSE_SUCCESS 1
+#define DATA_PARSE_UNSUCCESS -1
+#define DATA_PARSE_FAILED -2
+
+//modules return values
 #define STEP_FORWARD 1
 #define STEP_REWIND 2
 #define STEP_CYC 3
 #define STEP_OVER 4 
 
+
+#define MAX_MODULES_SIZE 16
 
 #define HOOK_MODULES_CONSTRUCT(eventLoop_p) hook_modules_construct(eventLoop_p)
 #define HOOK_MODULES_DESTRUCT  hook_modules_destruct()
@@ -54,8 +61,9 @@
 #define HOOK_MODULES_DONE(client_p) hook_modules_done(client_p)
 
 typedef void (*do_handler)(dict * result);
-list * modules;
 
+dict *allModules;
+list * modules;
 typedef struct module{
 	char * module_name ;
 

@@ -75,13 +75,18 @@ int echo_destruct(void  * echo_context_p){
 }
 
 int echo_package_complete(Client *client_p){
+    client_p->recv_msg_times ++;
+    if (client_p->recv_msg_times > MAX_CLIENT_RECV_MSG_TIMES){
+        return DATA_PARSE_FAILED;
+    }
+
     if (client_p->recv_msg_len > 0 && client_p->recv_msg !=NULL){
         ntLogging(LOG_DEBUG,"data :%s", client_p->recv_msg);
         if (client_p->recv_msg[client_p->recv_msg_len-1] == '\n') {
-            return 1; 
+            return DATA_PARSE_SUCCESS; 
         } 
     }
-    return -1;
+    return DATA_PARSE_UNSUCCESS;
 }
 
 int echo_accept (void * echo_context_p, Client * client_p){
@@ -122,7 +127,7 @@ int echo_done(void  *echo_context_p, Client *client_p){
 }
 
 
-Module echo_module = { "echo",
+Module echo_module = { "echo_module",
 	echo_construct,
 	echo_destruct,
     echo_accept,

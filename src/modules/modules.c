@@ -34,20 +34,41 @@
 #include "modules.h"
 #include "../log.h"
 #include "../dict.h"
+#include "../ntconfig.h"
 #include "echo_module.c"
 
 #define REGISTE_MODULE(module)\
-	listAddNodeTail(modules, &module)
+	listAddNodeTail(modules, module);\
+    ntLogging(LOG_DEBUG,"registe_module:%s", module->module_name)
 
+#define ADD_MODULES(m)\
+dictAdd(allModules, m.module_name, &m);\
+ntLogging(LOG_DEBUG,"add_modules:%s", m.module_name)
 
-void loadAllModules(){
-	//dict *modules = dictCreate(&dictTypeHeapStringCopyKey,NULL);
+void registeModules(){
+
     modules = listCreate();
 	ntLogging(LOG_DEBUG,"load all modules");
-	
-	REGISTE_MODULE(echo_module);
+    
+    int i=0;
+    char * module_name;
+    Module * module_st = NULL;
+    for(i; g_server_config.modules[i]!= NULL; i++){
+        module_name = g_server_config.modules[i] ;
+        if ((module_st = (Module *)dictFetchValue(allModules, module_name)) != NULL){
+	        REGISTE_MODULE(module_st);
+        }
+    } 
 
 }
+
+void loadAllModules(){
+    allModules = dictCreate(&dictTypeHeapStringCopyKey, NULL);
+    ADD_MODULES(echo_module);
+
+    registeModules();
+} 
+
 
 int hook_modules_construct(EventLoop * eventLoop_p){
     listNode * current;

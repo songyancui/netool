@@ -14,14 +14,18 @@ int main(int argc, char ** argv){
     Mode * mode_p;
     dict * Modules;
 
-	ntConfigInit(conf_file_path);
     ntLogInit(LOG_DEBUG, NULL);
+	ntConfigInit(conf_file_path);
     ntLogging(LOG_DEBUG, " load the host: %d", g_server_config.host);
     ntLogging(LOG_DEBUG, " load the port: %d", g_server_config.port);
     ntLogging(LOG_DEBUG, " worker_count: %d", g_server_config.worker_count);
     ntLogging(LOG_DEBUG, " master_count: %d", g_server_config.master_count);
     ntLogging(LOG_DEBUG, " mode: %s", g_server_config.mode);
-    loadAllModules();
+    int i=0;
+    for(i ; g_server_config.modules[i] != NULL; i++){
+        ntLogging(LOG_DEBUG,"modules:%s",g_server_config.modules[i]);
+    }
+
 
     /** mode  start**/
     mode_p = createMode();

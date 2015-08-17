@@ -5,6 +5,8 @@
 
 #ifndef __NTCONFIG_H
 #define __NTCONFIG_H
+#include "modules/modules.h"
+
 typedef struct server_config{
         int        host;   /* it must to be ip */
         int  port;    /* it must to be  htons  */
@@ -12,6 +14,8 @@ typedef struct server_config{
         int master_count;
         int worker_count;
         char mode[10];
+        char * modules[MAX_MODULES_SIZE];
+
 } Server_config ;
 
 /*

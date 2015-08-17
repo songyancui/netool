@@ -55,6 +55,7 @@ int ntConfigInit(char * path){
 	config = get_config_from_file(path);
 	char *value;	
 	int  valueInt;	
+    cJSON *valueArray ;
 
 	if(!config){
 		ntLogging(LOG_FATAL, "Could not parse config file %s", path);
@@ -113,7 +114,35 @@ int ntConfigInit(char * path){
         strcpy(g_server_config.mode,"single");
         ntLogging(LOG_WARNING,"there is no mode , default single" );
     }
+      
+    value = NULL;
+    valueArray = cJSON_GetObjectItem(config, "modules");
+    int arrayCount = 0;  
+    if (valueArray == NULL){
+        ntLogging(LOG_WARNING,"valueArray is Empyt");
+        g_server_config.modules[0] = NULL;
+    }else{
+        arrayCount = cJSON_GetArraySize(valueArray);
+        int j =0, i=0; 
+        for (i; i < arrayCount; i++){
+            value = cJSON_GetArrayItem(valueArray, i)->valuestring;
+            if (value == NULL){
+                continue;
+            }
+            char * moduleString = strdup(value); 
+            if (moduleString != NULL && j <= (MAX_MODULES_SIZE - 1)){
+                g_server_config.modules[j++] = moduleString;
+            }else {
+                continue;  
+            }
+        }
+
+        if (j <=  MAX_MODULES_SIZE){
+            g_server_config.modules[j] = NULL;
     
+        }
+    } 
+
 	return 1;
 	
 }

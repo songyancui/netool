@@ -48,6 +48,7 @@ Client * createClient(int fd){
     cp->fd = fd;
     cp->recv_msg_len = 0;
     cp->recv_msg = NULL;
+    cp->recv_msg_times = 0;
 
     cp->send_msg_len = 0;
     cp->send_msg = NULL;
