@@ -42,8 +42,8 @@
     ntLogging(LOG_DEBUG,"registe_module:%s", module->module_name)
 
 #define ADD_MODULES(m)\
-dictAdd(allModules, m.module_name, &m);\
-ntLogging(LOG_DEBUG,"add_modules:%s", m.module_name)
+    dictAdd(allModules, m.module_name, &m);\
+    ntLogging(LOG_DEBUG,"add_modules:%s", m.module_name)
 
 void registeModules(){
 
@@ -57,6 +57,9 @@ void registeModules(){
         module_name = g_server_config.modules[i] ;
         if ((module_st = (Module *)dictFetchValue(allModules, module_name)) != NULL){
 	        REGISTE_MODULE(module_st);
+        }else{
+            ntLogging(LOG_WARNING,"there IS not $s before adding allModules", module_name);
+            continue;
         }
     } 
 

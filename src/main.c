@@ -14,7 +14,8 @@ int main(int argc, char ** argv){
     Mode * mode_p;
     dict * Modules;
 
-    ntLogInit(LOG_DEBUG, NULL);
+    ntLogInit(LOG_WARNING, NULL);
+    //ntLogInit(LOG_DEBUG, NULL);
 	ntConfigInit(conf_file_path);
     ntLogging(LOG_DEBUG, " load the host: %d", g_server_config.host);
     ntLogging(LOG_DEBUG, " load the port: %d", g_server_config.port);

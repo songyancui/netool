@@ -54,6 +54,8 @@ Client * createClient(int fd){
     cp->send_msg = NULL;
     cp->have_sent_msg_len = 0;
 
+    cp->module_self_data = NULL;
+
     return cp;
 }
 void  delClient(Client * client_p){
@@ -102,6 +104,7 @@ int  clientReadData(Client * client_p){
         } else if (recv_len == 0 ){
              ntLogging(LOG_WARNING,"client close socket, so delete  client");
              delClient(client_p);
+             return ERR_DEL_CLIENT ;
         }
         client_p->recv_msg_len = recv_len;
     } else {
@@ -123,6 +126,7 @@ int  clientReadData(Client * client_p){
         if (client_p->recv_msg_len >= RECV_MAX_LENGTH){
             ntLogging(LOG_WARNING,"the recv_msg is full, so delete client");
             delClient(client_p);
+            return ERR_DEL_CLIENT ;
         }
     }   
     return recv_len; 

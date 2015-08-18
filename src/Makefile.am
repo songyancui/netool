@@ -1,6 +1,6 @@
 #AUTOMAKE_OPTIONS=foreign 
 
-bin_PROGRAMS=netool test
+bin_PROGRAMS=netool testAccept 
 
 netool_LDADD= -lm
 netool_SOURCES=main.c \
@@ -22,4 +22,9 @@ netool_SOURCES=main.c \
 		third/cJSON/cJSON.c
 		
 
-test_SOURCES= test_main.c 
+testAccept_SOURCES= test_accept.c \
+                    log.c\
+                    mm.c\
+                    net.c\
+                    io.c\
+                    event.c

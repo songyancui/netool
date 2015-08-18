@@ -56,6 +56,14 @@ void readCallback(struct eventLoop * eventLoop_p, int fd, void * clientData, int
     Client * cp = (Client *)clientData;
 
     recv_totlen = clientReadData(cp);
+    if (recv_totlen == ERR_DEL_CLIENT){
+        mask |= IO_WRITABLE&IO_READABLE;
+        delIoEvent(eventLoop_p, fd, mask);
+        HOOK_MODULES_DONE(cp);
+        //delClient(cp);
+        return; 
+    }
+
     //ntreadEasyByCount(fd,send_msg, 15);
     HOOK_MODULES_READING(cp);
 

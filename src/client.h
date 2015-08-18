@@ -31,6 +31,8 @@
 #define RECV_MAX_LENGTH 4096
 #define MAX_CLIENT_RECV_MSG_TIMES 3
 
+#define ERR_DEL_CLIENT -1003
+
 typedef struct client{
     int fd;
 
@@ -42,6 +44,7 @@ typedef struct client{
     char * send_msg;
     int have_sent_msg_len;
 
+    void * module_self_data;
 } Client;
 
 Client * createClient(int fd);

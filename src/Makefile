@@ -78,7 +78,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = netool$(EXEEXT) test$(EXEEXT)
+bin_PROGRAMS = netool$(EXEEXT) testAccept$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -99,9 +99,10 @@ am_netool_OBJECTS = main.$(OBJEXT) log.$(OBJEXT) test.$(OBJEXT) \
 	cJSON.$(OBJEXT)
 netool_OBJECTS = $(am_netool_OBJECTS)
 netool_DEPENDENCIES =
-am_test_OBJECTS = test_main.$(OBJEXT)
-test_OBJECTS = $(am_test_OBJECTS)
-test_LDADD = $(LDADD)
+am_testAccept_OBJECTS = test_accept.$(OBJEXT) log.$(OBJEXT) \
+	mm.$(OBJEXT) net.$(OBJEXT) io.$(OBJEXT) event.$(OBJEXT)
+testAccept_OBJECTS = $(am_testAccept_OBJECTS)
+testAccept_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -134,8 +135,8 @@ AM_V_CCLD = $(am__v_CCLD_$(V))
 am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(netool_SOURCES) $(test_SOURCES)
-DIST_SOURCES = $(netool_SOURCES) $(test_SOURCES)
+SOURCES = $(netool_SOURCES) $(testAccept_SOURCES)
+DIST_SOURCES = $(netool_SOURCES) $(testAccept_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -264,7 +265,13 @@ netool_SOURCES = main.c \
         modules/modules.c\
 		third/cJSON/cJSON.c
 
-test_SOURCES = test_main.c 
+testAccept_SOURCES = test_accept.c \
+                    log.c\
+                    mm.c\
+                    net.c\
+                    io.c\
+                    event.c
+
 all: all-am
 
 .SUFFIXES:
@@ -346,9 +353,9 @@ netool$(EXEEXT): $(netool_OBJECTS) $(netool_DEPENDENCIES) $(EXTRA_netool_DEPENDE
 	@rm -f netool$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(netool_OBJECTS) $(netool_LDADD) $(LIBS)
 
-test$(EXEEXT): $(test_OBJECTS) $(test_DEPENDENCIES) $(EXTRA_test_DEPENDENCIES) 
-	@rm -f test$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(test_OBJECTS) $(test_LDADD) $(LIBS)
+testAccept$(EXEEXT): $(testAccept_OBJECTS) $(testAccept_DEPENDENCIES) $(EXTRA_testAccept_DEPENDENCIES) 
+	@rm -f testAccept$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(testAccept_OBJECTS) $(testAccept_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -372,7 +379,7 @@ include ./$(DEPDIR)/modules.Po
 include ./$(DEPDIR)/net.Po
 include ./$(DEPDIR)/ntconfig.Po
 include ./$(DEPDIR)/test.Po
-include ./$(DEPDIR)/test_main.Po
+include ./$(DEPDIR)/test_accept.Po
 include ./$(DEPDIR)/worker.Po
 
 .c.o:

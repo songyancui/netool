@@ -39,47 +39,45 @@
 #include "../client.h"
 #include "../io.h"
 
-typedef struct echo_message{
-	char  message[1024];
-	int message_len;
-}Echo_message;
 
-typedef struct echo_context {
+typedef struct http_context {
 	EventLoop *eventLoop_p;
-    Echo_message *message;
-}Echo_context;
+}Http_context;
 
+typedef struct http_parse_data{
+    int xx; //TOCSY
+} Http_parse_data;
 
-int echo_construct(Module * module_p, EventLoop * eventLoop_p){
-    ntLogging(LOG_DEBUG,"echo module construct ");
-	Echo_context *echo_context_p;
-    echo_context_p = ntmalloc(sizeof(Echo_context));
-    module_p->module_context = echo_context_p;
+int http_construct(Module * module_p, EventLoop * eventLoop_p){
+    ntLogging(LOG_DEBUG,"http module construct ");
+	Http_context *http_context_p;
+    http_context_p = ntmalloc(sizeof(Http_context));
+    module_p->module_context = http_context_p;
 
-    if (echo_context_p!=NULL){
-        echo_context_p->eventLoop_p = eventLoop_p;
-        echo_context_p->message = NULL;
+    if (http_context_p!=NULL){
+        http_context_p->eventLoop_p = eventLoop_p;
         return STEP_FORWARD; 
     }
     return STEP_FORWARD; 
 }
 
 
-int echo_destruct(void  * echo_context_p){
-    ntLogging(LOG_DEBUG,"echo module destruct ");
-	if(echo_context_p!=NULL){
-		ntfree(echo_context_p);
+int http_destruct(void  * http_context_p){
+    ntLogging(LOG_DEBUG,"http module destruct ");
+	if(http_context_p!=NULL){
+		ntfree(http_context_p);
     }
 
 	return STEP_FORWARD;
 }
 
-int echo_package_complete(Client *client_p){
+int http_package_complete(Client *client_p){
     client_p->recv_msg_times ++;
     if (client_p->recv_msg_times > MAX_CLIENT_RECV_MSG_TIMES){
         return DATA_PARSE_FAILED;
     }
 
+    //TOCSY 
     if (client_p->recv_msg_len > 0 && client_p->recv_msg !=NULL){
         ntLogging(LOG_DEBUG,"data :%s", client_p->recv_msg);
         if (client_p->recv_msg[client_p->recv_msg_len-1] == '\n') {
@@ -89,29 +87,31 @@ int echo_package_complete(Client *client_p){
     return DATA_PARSE_UNSUCCESS;
 }
 
-int echo_accept (void * echo_context_p, Client * client_p){
+int http_accept (void * http_context_p, Client * client_p){
     ntLogging(LOG_DEBUG,"accept client %d", client_p->fd);  
     return STEP_FORWARD;
 }
 
-int echo_do_read(void  *echo_context_p, Client *client_p){
+int http_do_read(void  *http_context_p, Client *client_p){
     int result_code=0;
-    if (DATA_PARSE_FAILED == (result_code =echo_package_complete(client_p))) {
-        ntLogging(LOG_DEBUG,"reading data failed" );
-        return STEP_OVER ;
-    }else if(result_code == DATA_PARSE_SUCCESS){
-        return STEP_FORWARD;
-    
-    }else if (result_code == DATA_PARSE_UNSUCCESS) {
-        ntLogging(LOG_DEBUG,"reading data did not complete" );
-        return STEP_CYC ;
+
+    result_code = http_package_complete(client_p);
+    switch(result_code){
+        case DATA_PARSE_FAILED:
+            ntLogging(LOG_DEBUG,"reading data failed" );
+            return STEP_OVER ;
+        case DATA_PARSE_UNSUCCESS :
+            ntLogging(LOG_DEBUG,"reading data did not complete" );
+            return STEP_CYC ;
+        case DATA_PARSE_SUCCESS:
+            return STEP_FORWARD;
     }
     return STEP_FORWARD;
 }
 
 
-int echo_do(void  *echo_context_p, Client *client_p){
-    ntLogging(LOG_DEBUG,"echo_do");
+int http_do(void  *http_context_p, Client *client_p){
+    ntLogging(LOG_DEBUG,"http_do");
     
     client_p->send_msg = ntmalloc(client_p->recv_msg_len);
     if (client_p->send_msg == NULL){
@@ -123,24 +123,24 @@ int echo_do(void  *echo_context_p, Client *client_p){
     return STEP_FORWARD;
 }
 
-int echo_do_write(void *echo_context_p, Client *client_p){
-    ntLogging(LOG_DEBUG,"echo_do_write");
+int http_do_write(void *http_context_p, Client *client_p){
+    ntLogging(LOG_DEBUG,"http_do_write");
     return STEP_FORWARD;
 }
 
-int echo_done(void  *echo_context_p, Client *client_p){
-    ntLogging(LOG_DEBUG,"echo_done" );
+int http_done(void  *http_context_p, Client *client_p){
+    ntLogging(LOG_DEBUG,"http_done" );
 	return STEP_OVER;	
 }
 
 
-Module echo_module = { "echo_module",
-	echo_construct,
-	echo_destruct,
-    echo_accept,
-	echo_do_read,
-	echo_do,
-	echo_do_write,
-	echo_done,
+Module http_module = { "http_module",
+	http_construct,
+	http_destruct,
+    http_accept,
+	http_do_read,
+	http_do,
+	http_do_write,
+	http_done,
     NULL,
 };
